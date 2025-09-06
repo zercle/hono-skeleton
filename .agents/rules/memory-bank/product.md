@@ -1,69 +1,69 @@
-# Product Overview
+# Product
 
-## Project Purpose
-This is a **Hono.js Backend Mono-Repo Template** designed to provide a production-ready foundation for building scalable backend APIs using modern TypeScript practices. The template implements Domain-Driven Design with Clean Architecture patterns to ensure maintainable, testable, and well-structured code.
+## Name
+Hono Backend Mono-Repo Template
+
+## Purpose
+Provide a production-grade backend template built on Bun and Hono that demonstrates Domain-Driven Clean Architecture with strong boundaries, testability, and operational readiness out of the box.
 
 ## Problem Statement
-Many backend projects start without proper architectural foundations, leading to:
-- Tightly coupled code that's difficult to maintain and test
-- Inconsistent project structure across different domains
-- Lack of standardized patterns for dependency injection and data validation
-- Poor separation of concerns between business logic and infrastructure
-- Difficulty scaling teams due to unclear code organization
-
-## Solution Approach
-This template addresses these issues by providing:
-- **Clean Architecture**: Clear separation between entities, use cases, repositories, and handlers
-- **Domain-Driven Design**: Each business domain is self-contained with its own complete architecture
-- **Modern Stack**: Leveraging Hono.js for performance and Bun for speed
-- **Type Safety**: Full TypeScript implementation with Zod validation
-- **Dependency Injection**: Using TSyringe for proper inversion of control
-- **Standardized Patterns**: Consistent structure and conventions across all domains
+Teams starting new backend services often spend significant effort on bootstrapping project structure, wiring dependencies, configuring CI, and establishing best practices. This template reduces setup time and enforces a maintainable architecture from day one.
 
 ## Target Users
-- Backend developers building REST APIs
-- Teams looking for scalable architecture patterns
-- Projects requiring strict separation of concerns
-- Organizations standardizing on TypeScript/Node.js backends
-- Developers transitioning from other frameworks to Hono.js
+- Backend engineers and teams adopting Bun and Hono
+- Organizations standardizing on Clean Architecture and DDD
+- Developers who need a fast, opinionated starting point with testing and CI built-in
 
-## Expected Behavior
-The template should enable developers to:
-1. **Quick Start**: Set up a new backend project in minutes
-2. **Domain Addition**: Easily add new business domains following established patterns
-3. **Scalable Development**: Support multiple developers working on different domains simultaneously
-4. **Production Readiness**: Include all necessary tooling for deployment and monitoring
-5. **Testing**: Comprehensive test setup for unit and integration testing
-6. **Documentation**: Auto-generated API docs with OpenAPI/Swagger
-
-## Non-Functional Requirements
-- Testability without real data access:
-  - All business logic and HTTP handlers must be testable using in-memory or fake adapters via dependency injection
-  - Provide in-memory repository implementations for every repository interface
-  - Testing configuration must enable swapping infrastructure adapters via DI without touching production code
-  - External integrations must be accessed via ports to allow mocks/fakes in tests
-- Graceful shutdown:
-  - Handle SIGINT and SIGTERM
-  - Stop accepting new connections, drain in-flight requests with a configurable timeout
-  - Close database connections and other resources cleanly
-  - Flip readiness to unhealthy during drain, keep liveness healthy until exit
-  - Force close and emit structured error logs if timeout elapses
+## Core Value
+- Speed to first production-ready service
+- Clear architectural boundaries for long-term maintainability
+- Ready-to-use patterns for auth, validation, configuration, DI, and database
 
 ## Key Features
-- **Bun Runtime**: Fast JavaScript runtime with built-in package manager
-- **Hono.js Framework**: Lightweight, fast web framework
-- **Clean Architecture**: Proper layering and dependency inversion
-- **PostgreSQL + Drizzle**: Type-safe database operations
-- **JWT Authentication**: Secure token-based auth
-- **Docker Support**: Containerized deployment
-- **CI/CD Pipeline**: GitHub Actions setup
-- **API Documentation**: OpenAPI/Swagger integration
-- **Environment Management**: Proper config and secrets handling
+- Domain-Driven Clean Architecture layout with boundaries across entities, use cases, repositories, handlers, and routes
+- Hono-based HTTP API with OpenAPI docs and Swagger UI
+- Drizzle ORM with PostgreSQL and managed migrations
+- Zod validation and JSend response format
+- TSyringe dependency injection and modular composition
+- JWT auth primitives and UUIDv7 identifiers
+- Bun-native testing and development workflow
+- CI workflow for linting, formatting, tests, and Docker build
 
-## Success Metrics
-A successful implementation should provide:
-- Sub-100ms response times for simple CRUD operations
-- Clear domain boundaries with minimal cross-domain dependencies
-- High test coverage (>90%) across all layers
-- Consistent code patterns across all domains
-- Easy onboarding for new developers (< 1 day to productivity)
+## Non-Goals
+- Building a UI or frontend application
+- Providing domain-specific business logic beyond examples
+- Supporting every database or message broker out of the box
+- Replacing organization-specific DevOps and deployment policies
+
+## Success Criteria
+- A new service can be created, tested, documented, and containerized in under one hour
+- Code remains modular and testable as features grow
+- CI runs reliably on each change with fast feedback
+- Teams can extend domains without breaking cross-boundary contracts
+
+## KPIs
+- Bootstrap time to first API endpoint and test passing
+- CI duration and pass rate
+- Unit/integration test coverage for public endpoints and use cases
+- Defect rate from boundary violations (e.g., domain leakage)
+
+## User Experience Principles
+- Minimal ceremony to add a new domain or endpoint
+- Consistent API responses using JSend standard
+- Clear errors with safe defaults in production
+- Discoverable documentation via OpenAPI and Swagger UI
+
+## Example Use Cases
+- Build an Auth domain with register, login, profile, and refresh endpoints
+- Add a Posts domain that demonstrates CRUD with repository and use case separation
+- Extend configuration for multiple environments using YAML plus .env overrides
+
+## Current Repository Signals
+- The Memory Bank brief describes the intended architecture and stack at [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md)
+- CI workflow exists at [.github/workflows/ci.yml](.github/workflows/ci.yml) referencing scripts for linting, formatting, unit tests, integration tests, and Docker build
+- Source packages and application code are not present in this repository snapshot; this template may be in an early stage or intentionally minimal
+
+## Open Questions
+- Will this repo include the full mono-repo structure (api, shared, db) or link to a separate template?
+- Which package manager and workspace strategy will be standardized (Bun workspaces, pnpm, or npm)?
+- What testing matrix and environments should CI validate beyond Linux (e.g., macOS, Windows)?

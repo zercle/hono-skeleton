@@ -1,262 +1,160 @@
-# Technology Stack
+# Tech
 
-## Runtime & Framework
-- **Runtime**: Bun 1.x ONLY (NOT Node.js) - native JavaScript runtime with built-in package manager
-- **Web Framework**: Hono.js 4.x (lightweight, fast, edge-compatible) - NOT Express or other Node.js frameworks
-- **Language**: TypeScript ONLY (strict type checking enabled, zero JavaScript files)
+## Stack Overview
+- Runtime: Bun 1.x (target in CI)
+- Language: TypeScript
+- HTTP Framework: Hono
+- Validation: Zod
+- Dependency Injection: TSyringe
+- Persistence: PostgreSQL with Drizzle ORM and drizzle-kit for migrations
+- Auth/Security: JSON Web Tokens, bcryptjs for password hashing, UUIDv7 identifiers
+- Config: YAML per environment plus .env overrides
+- Logging: pino and pino-pretty for structured logs
+- API Docs: OpenAPI generation and Swagger UI
+- Testing: Bun test runner (unit and integration stages planned in CI)
+- Containerization: Docker image build in CI
 
-## Core Dependencies
-```json
-{
-  "dependencies": {
-    "hono": "^4.0.0",
-    "@hono/node-server": "^1.8.0",
-    "drizzle-orm": "^0.29.0",
-    "postgres": "^3.4.0",
-    "zod": "^3.22.0",
-    "tsyringe": "^4.8.0",
-    "bcrypt": "^5.1.0",
-    "jsonwebtoken": "^9.0.0",
-    "uuidv7": "^0.6.0",
-    "yaml": "^2.3.0"
-  }
-}
-```
+References:
+- CI workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
+- Architecture intent: [.agents/rules/memory-bank/architecture.md](.agents/rules/memory-bank/architecture.md)
+- Product goals: [.agents/rules/memory-bank/product.md](.agents/rules/memory-bank/product.md)
+- Brief: [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md)
 
-## Development Dependencies
-```json
-{
-  "devDependencies": {
-    "bun-types": "latest",
-    "@types/bcrypt": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.0",
-    "@types/yaml": "^2.0.0",
-    "drizzle-kit": "^0.20.0",
-    "eslint": "^8.0.0",
-    "prettier": "^3.0.0"
-  }
-}
-```
+## Environment and Prerequisites
+- Bun: Install latest 1.x
+- Node.js: Optional (tooling only, Bun is primary runtime)
+- Docker: For local Postgres and container image builds
+- PostgreSQL: Local server or Docker container for development and integration tests
 
-## Database & ORM
-- **Database**: PostgreSQL (production-ready relational database)
-- **ORM**: Drizzle ORM (type-safe, performant SQL toolkit)
-- **Migrations**: Drizzle Kit for schema management
-- **Connection**: Native PostgreSQL driver
+Recommended local setup (conceptual):
+- Use Docker Compose or a single Docker container to run Postgres
+- Create a dedicated database per environment (development, test)
+- Provide a .env file with overrides such as database URL and JWT secret
 
-## Authentication & Security
-- **JWT**: JSON Web Tokens for stateless authentication
-- **Hashing**: Bcrypt for password hashing
-- **Middleware**: Hono JWT middleware for route protection
-- **UUID**: UUIDv7 for index-friendly unique identifiers
-- **CORS**: Configurable cross-origin resource sharing
+## Configuration Model
+- Base configuration in YAML per environment (e.g., config/development.yaml)
+- .env file for local overrides and secrets (never commit production secrets)
+- Environment variable precedence:
+  1. Default/base config
+  2. Environment-specific YAML
+  3. .env entries for local
+  4. Process environment for deploy/runtime
+- Expected keys (from brief):
+  - server: port, host
+  - database: url
+  - auth.jwt: expiresIn
+  - cors: origins
 
-## Validation & Serialization
-- **Validation**: Zod schemas for runtime type checking
-- **Response Format**: JSend standard for consistent API responses
-- **OpenAPI**: Hono OpenAPI for API documentation
-- **Swagger UI**: Interactive API documentation
+## Logging and Error Handling
+- Logging:
+  - pino for structured logs; pino-pretty for local readability
+  - Log fields to include: level, time, context, trace/request IDs when available
+- Error handling:
+  - Centralized middleware sanitizes error output in production
+  - Map validation and domain errors to explicit HTTP status codes
+  - Avoid leaking internal stack traces to clients
 
-## Dependency Injection
-- **Container**: TSyringe for TypeScript dependency injection
-- **Pattern**: Constructor injection with interfaces
-- **Registration**: Centralized container setup
-- **Benefits**: Testability and loose coupling
+## Security
+- JWT:
+  - HS256 or stronger; secret from environment
+  - Short-lived tokens with refresh strategy handled in Auth domain
+- Passwords:
+  - bcryptjs with configurable cost (rounds) from environment
+  - Never log or echo secrets
+- CORS:
+  - Explicitly configured allowed origins (no wildcard in production)
+- Input validation:
+  - Zod schemas at the boundary of every public handler
+- Headers and transport:
+  - Prefer TLS termination upstream in production environments
 
-## Testing
-- **Test Runner**: Bun test ONLY (native test runner, NOT Jest/Vitest/Mocha)
-- **Compatibility**: Bun-native testing, no Node.js testing frameworks
-- **Types**: Unit tests and integration tests
-- **Coverage**: Built-in Bun coverage reporting
-- **Mocking**: Easy mocking with DI container
-
-### Testability Without Real Data Access
-- **Ports and Adapters**: All external dependencies must be accessed through interfaces to allow fakes/mocks in tests
-- **In-Memory Adapters**:
-  - Provide in-memory or fake implementations for every repository and external client interface
-  - Register these adapters in tests by overriding DI bindings
-- **DI-Driven Swapping**:
-  - Use the centralized DI container to swap implementations in tests
-  - Example bindings: [src/shared/container/container.ts](src/shared/container/container.ts)
-- **Repository Contracts**:
-  - Define repository interfaces per domain (e.g., [src/domains/auth/repositories/UserRepository.ts](src/domains/auth/repositories/UserRepository.ts))
-  - Production adapters use Drizzle/Postgres; tests use in-memory arrays/maps
-- **No Real I/O in Unit Tests**:
-  - Unit tests run with only in-memory adapters and pure functions
-  - Integration tests may run against in-memory adapters to validate HTTP and routing behavior without a real DB
-- **Determinism**:
-  - Prefer injecting time/ID generators for deterministic tests
-  - Use seeded data builders and fixtures instead of DB seed scripts
-
-### Test Categories
-- **Unit**: Use cases, validators, utilities — no I/O; DI overrides to in-memory/fakes
-- **Integration (No-DB)**: HTTP handlers and middleware using in-memory adapters to cover end-to-end behavior without real data sources
-- **Integration (DB-Optional)**: When needed, explicitly opt-in tests may run against a real database; these are separate and non-blocking for the core suite
-
-### Suggested Conventions
-- Place test doubles near domains or under a dedicated test support folder
-- Provide helper utilities to override DI bindings for tests
-- Keep test scenarios independent and isolated; avoid shared global state
-
-## Development Tools
-- **Hot Reload**: Built-in Bun `--watch` mode (NOT nodemon or other Node.js tools)
-- **Linting**: ESLint with TypeScript rules
-- **Formatting**: Prettier for code formatting
-- **Type Checking**: TypeScript compiler in strict mode
-- **Package Manager**: Bun ONLY (NOT npm, yarn, or pnpm)
-
-## Build & Deployment
-- **Build Tool**: Bun build ONLY (NOT Webpack, Rollup, Vite, or esbuild)
-- **Container**: Docker with multi-stage builds
-- **Base Image**: `oven/bun:1` official Docker image (NOT Node.js images)
-- **Process Manager**: Bun native process management for production
-- **Environment**: Docker Compose for local development
-
-## CI/CD
-- **Platform**: GitHub Actions
-- **Workflow**: Lint → Test → Build → Docker
-- **Matrix**: Multiple Bun versions support
-- **Caching**: Dependencies and build artifacts
-- **Deployment**: Docker image creation
-
-## Development Environment
-- **Package Manager**: Bun (faster than npm/yarn)
-- **Node Version**: Compatible with Node.js 18+
-- **TypeScript**: Strict configuration with path mapping
-- **IDE Support**: Full TypeScript intellisense
-- **Debugging**: Native Bun debugger support
-
-## Configuration Management
-- **Hierarchical Loading**: YAML files → .env files → runtime environment variables
-- **YAML Config**: Environment-specific files in `./config/<env>.yaml`
-- **Fallback**: `.env` files for local development overrides
-- **Runtime Override**: Environment variables take highest priority
-- **Schema**: Zod schemas for configuration validation
-- **Secrets**: Environment variables for sensitive data
-- **Multi-env**: Support for dev/staging/prod environments
+## Database and Migrations
+- Drizzle ORM for schema and queries
+- drizzle-kit to generate and manage SQL migrations
+- Migration workflow:
+  - Update schema definitions
+  - Generate migrations
+  - Apply migrations for development and CI
+- CI/Integration considerations:
+  - Ensure Postgres is available (service container or external)
+  - Use ephemeral databases for isolation
 
 ## API Documentation
-- **Standard**: OpenAPI 3.0 specification
-- **Generation**: Automatic from Zod schemas and route definitions
-- **UI**: Swagger UI for interactive testing
-- **Export**: JSON/YAML spec export capability
+- OpenAPI schema generated from route and schema definitions
+- Swagger UI endpoint for discovery
+- Contracts synchronized with code to prevent drift
 
-## Monitoring & Observability
-- **Health Checks**: Built-in health check endpoints
-- **Logging**: Structured logging with levels
-- **Metrics**: Basic performance and usage metrics
-- **Error Tracking**: Error handling and reporting
+## Testing Strategy
+- Unit tests:
+  - Exercise use cases and isolated components
+  - Mock repository interfaces and external services
+- Integration tests:
+  - Exercise HTTP handlers and repositories with a real Postgres (or container)
+  - Run migrations prior to test execution
+- Test runner:
+  - Bun test runner by default; Vitest optional if desired for ecosystem features
+- CI stages (from workflow):
+  - test:unit
+  - test:integration
 
-## Graceful Shutdown
-- **Signals**: Handle SIGINT and SIGTERM to initiate an orderly shutdown in [src/server.ts](src/server.ts)
-- **Readiness/Liveness**:
-  - Flip readiness to unhealthy immediately to stop new traffic
-  - Keep liveness healthy during the drain period so orchestrators do not restart the instance prematurely
-- **Connection Drain**:
-  - Stop accepting new connections and allow in-flight requests to complete within a configurable timeout
-  - After timeout, force-close with structured logs to aid incident analysis
-- **Resource Cleanup**:
-  - Close database pools and drivers (see [src/infrastructure/database/connection.ts](src/infrastructure/database/connection.ts))
-  - Flush logs and ensure buffers are drained (see [src/infrastructure/logging/logger.ts](src/infrastructure/logging/logger.ts))
-  - Close any other outbound clients (cache, queues) if present
-- **Configuration**:
-  - Grace period and timeouts configured via YAML/.env and validated by Zod
-  - Centralize lifecycle wiring in the entrypoint and infrastructure close handlers
+## CI/CD Overview
+- GitHub Actions runner: ubuntu-latest
+- Bun 1.x matrix setup
+- Steps executed:
+  - bun install --frozen-lockfile
+  - bun run lint
+  - bun run format:check
+  - bun run test:unit
+  - bun run test:integration
+  - docker build for image creation
+- Notes:
+  - The repository must provide a package.json with all referenced scripts for CI to pass
+  - If the project is a mono-repo, prefer workspace-aware scripts at the root or a task-runner
 
-## Development Scripts
-```json
-{
-  "scripts": {
-    "dev": "bun --watch src/server.ts",
-    "build": "bun build src/server.ts --outdir ./dist",
-    "start": "bun dist/server.js",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "db:generate": "drizzle-kit generate:pg",
-    "db:migrate": "bun src/scripts/migrate.ts",
-    "db:seed": "bun src/scripts/seed.ts",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
-    "format:check": "prettier --check src/**/*.ts",
-    "test:unit": "bun test --filter unit",
-    "test:integration": "bun test --filter integration"
-  }
-}
-```
+## Scripts and Tooling (Expected)
+The following scripts are expected by CI and should be provided by the repository:
+- lint: Run ESLint across the codebase
+- format:check: Verify Prettier formatting (no write)
+- test:unit: Run unit tests
+- test:integration: Run integration tests
+- build: Produce production artifacts (and optionally type-check)
+- start: Run built server
+- migrate/seed: Database lifecycle commands via drizzle-kit and execution scripts
 
-## Configuration Structure
+Linting and formatting:
+- ESLint:
+  - Typescript plugin and parser
+  - Rules aligned with Clean Architecture boundaries (optional dependency constraints)
+- Prettier:
+  - Project-wide formatting; enforce consistent line width, quotes, and trailing commas
 
-### YAML Configuration (Primary)
-```yaml
-# config/development.yaml
-server:
-  port: 3000
-  host: 0.0.0.0
-  nodeEnv: development
+## Dependency Management
+- Prefer minimal, stable dependencies; pin versions where necessary
+- Use exact versions for core infra tools to avoid pipeline drift
+- Periodically update and test under CI before merging
+- Consider workspaces if adopting a mono-repo (api, shared, db)
+  - If using Bun workspaces, define workspace packages and shared tsconfig references
 
-database:
-  url: postgres://user:pass@localhost:5432/dev_db
+## Observability
+- Structured logging with pino; environment-based log levels
+- Add request-scoped context in middleware
+- Future enhancements:
+  - Distributed tracing hooks
+  - Standard metrics (latency, throughput, error rates)
 
-auth:
-  jwt:
-    expiresIn: 24h
-    refreshExpiresIn: 7d
+## Performance Considerations
+- Bun runtime offers fast startup and low overhead
+- Validation and serialization costs should be measured on critical paths
+- Use connection pooling for Postgres
+- Avoid excessive JSON serialization; prefer streaming when necessary
 
-redis:
-  url: redis://localhost:6379
+## Constraints and Assumptions
+- Runtime is Bun 1.x across local and CI
+- Postgres availability is required for integration and runtime
+- The current repository snapshot may not yet include code or package.json; CI will fail until scripts and code are added
+- Production deployments are containerized using Docker images built in CI
 
-cors:
-  origins: ["http://localhost:3000", "http://localhost:5173"]
-  credentials: true
-
-api:
-  title: Hono Skeleton API
-  version: 1.0.0
-  description: Production-ready Hono.js backend
-  swagger:
-    enabled: true
-
-logging:
-  level: info
-  pretty: true
-
-rateLimit:
-  windowMs: 900000
-  maxRequests: 100
-
-security:
-  bcryptRounds: 12
-  passwordMinLength: 8
-```
-
-### Environment Variables (Overrides)
-```env
-# .env - Local development overrides
-PORT=3001
-DATABASE_URL=postgres://user:pass@localhost:5432/local_override
-JWT_SECRET=your-local-secret-key
-REDIS_URL=redis://localhost:6380
-```
-
-### Runtime Environment Variables (Final Override)
-```bash
-# Deployment environment variables
-export NODE_ENV=production
-export DATABASE_URL=postgres://prod-user:prod-pass@prod-host:5432/prod_db
-export JWT_SECRET=production-secret
-export REDIS_URL=redis://prod-redis:6379
-```
-
-## Performance Characteristics
-- **Startup Time**: Sub-second with Bun runtime
-- **Memory Usage**: Low memory footprint
-- **Request Throughput**: High concurrency support
-- **Bundle Size**: Optimized build output
-- **Database**: Connection pooling for efficiency
-
-## Compatibility
-- **Node.js**: Compatible with Node.js ecosystem
-- **Edge**: Hono.js supports edge runtimes
-- **Serverless**: Can run in serverless environments
-- **Docker**: Full containerization support
-- **Platform**: Cross-platform (Linux, macOS, Windows)
+## Open Questions
+- Will the repository use Bun workspaces for api, shared, and db packages?
+- How will Postgres be provisioned in CI (service container vs. external)?
+- Should Vitest be adopted explicitly, or standardize solely on Bun test runner?

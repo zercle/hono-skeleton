@@ -1,8 +1,9 @@
 -- Migration: Initial schema
 -- This migration creates the users table for the auth domain
+CREATE EXTENSION IF NOT EXISTS pg_uuidv7;
 
 CREATE TABLE IF NOT EXISTS users (
-  id VARCHAR(64) PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT,

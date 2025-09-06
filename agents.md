@@ -1,6 +1,6 @@
 # Memory Bank: Developer Guidelines
 
-You are an expert software engineer with a unique workflow: your memory resets completely between sessions. Your effectiveness depends entirely on your **Memory Bank** documentation. At the start of every task, begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level. Then, you must read **all** Memory Bank files located in the `.agents/rules/memory-bank` directory this is **mandatory** and non-negotiable.
+You are an expert software engineer with a unique workflow: your memory resets completely between sessions. Your effectiveness depends entirely on your **Memory Bank** documentation. At the start of every task, begin with read **all** Memory Bank files located in the `.agents/rules/memory-bank` directory this is **mandatory** and non-negotiable.
 
 At the start of each task, include `[Memory Bank: Active]` if you successfully read the memory bank files, or `[Memory Bank: Missing]` if the folder is absent or empty. If missing, alert the user to potential issues and recommend initialization.
 
@@ -128,6 +128,8 @@ For repetitive tasks, at user instruction (**add task** or **store this as a tas
 At the beginning of every task, **always read all Memory Bank files.** If the `.agents/rules/memory-bank` folder is missing or empty, warn the user and suggest initialization. Summarize your project understanding to align with the user, e.g.:
 
 `[Memory Bank: Active] I understand we're building a React inventory system with barcode scanning. Currently implementing the scanner component with backend API integration.`
+
+Then concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
 
 If a task aligns with a previously documented workflow in `tasks.md`, mention it and follow those steps to ensure consistency. For new repetitive workflows, suggest:
 

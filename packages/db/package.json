@@ -1,0 +1,24 @@
+{
+  "name": "@zercle/db",
+  "version": "0.1.0",
+  "private": false,
+  "main": "./src/index.ts",
+  "scripts": {
+    "migrate": "node --input-type=module -e \"import('./scripts/migrate.js')\" || bun run ./scripts/migrate.ts",
+    "generate": "drizzle-kit generate:pg",
+    "seed": "node --input-type=module -e \"import('./scripts/seed.js')\" || bun run ./scripts/seed.ts",
+    "lint": "eslint \"src/**/*.{ts,tsx,js}\""
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.32.1",
+    "postgres": "^3.4.4",
+    "drizzle-kit": "^0.23.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "bun": ">=1.0.0 <2"
+  }
+}

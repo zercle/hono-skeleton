@@ -1,0 +1,38 @@
+{
+  "name": "@zercle/api",
+  "version": "0.1.0",
+  "private": false,
+  "main": "./src/server.ts",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "build": "bun build src/server.ts --outdir ../../dist/api",
+    "start": "bun ../../dist/api/server.js",
+    "lint": "eslint \"src/**/*.{ts,tsx,js}\"",
+    "test": "bun test",
+    "test:unit": "bun test --filter unit",
+    "test:integration": "bun test --filter integration"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^17.2.2",
+    "hono": "^4.5.11",
+    "reflect-metadata": "^0.2.2",
+    "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.1",
+    "tsyringe": "^4.8.0",
+    "uuidv7": "^1.0.1",
+    "zod": "^3.23.8",
+    "@hono/zod-openapi": "^0.9.7",
+    "@hono/swagger-ui": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "drizzle-kit": "^0.23.1",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "bun": ">=1.0.0 <2"
+  }
+}

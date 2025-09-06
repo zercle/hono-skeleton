@@ -13,13 +13,14 @@ Repository: Hono Backend Mono-Repo Template
 - Workflows note at [.github/workflows/README.md](.github/workflows/README.md)
 
 ## Repository state snapshot
-- The workspace currently contains Memory Bank files and GitHub Actions CI config
-- No application source directories or package manifests are present in this snapshot
-- The brief describes an intended mono-repo layout and scripts that are not yet materialized here
+- Repository is organized as a Bun + Hono mono-repo with source code present under [packages/api](packages/api), [packages/db](packages/db), and [packages/shared](packages/shared)
+- The Memory Bank brief describes a single-app src/ layout; this is an intentional divergence captured here
+- CI workflows exist under [.github/workflows/ci.yml](.github/workflows/ci.yml); a root [package.json](package.json) and workspace packages are present
 
 ## Implications
-- CI steps reference scripts such as lint, format:check, test:unit, test:integration that will fail until a package.json with those scripts exists
-- The brief lists dependencies and scripts typical for the API service; these are design intents, not yet implemented in this repository state
+- Core Memory Bank docs mirror the brief exactly by directive; any divergence from the current mono-repo implementation is documented here in context
+- Ensure CI steps in [.github/workflows/ci.yml](.github/workflows/ci.yml) map to implemented scripts at the root [package.json](package.json) and/or workspace packages under [packages/*](packages)
+- Consumers should treat [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md) as architectural intent; context highlights where the live repo differs
 
 ## Decisions captured
 - Adopt Domain-Driven Clean Architecture with Hono on Bun as per brief
@@ -27,8 +28,12 @@ Repository: Hono Backend Mono-Repo Template
 - Use Zod for validation, TSyringe for DI, JWT for auth, UUIDv7 for identifiers, and JSend response format
 
 ## Recent updates
-- Added Memory Bank product document at [.agents/rules/memory-bank/product.md](.agents/rules/memory-bank/product.md)
+- Updated core docs to strictly mirror the brief:
+  - [.agents/rules/memory-bank/product.md](.agents/rules/memory-bank/product.md)
+  - [.agents/rules/memory-bank/architecture.md](.agents/rules/memory-bank/architecture.md)
+  - [.agents/rules/memory-bank/tech.md](.agents/rules/memory-bank/tech.md)
 - Confirmed CI workflow presence at [.github/workflows/ci.yml](.github/workflows/ci.yml)
+- Documented divergence between brief’s single-app structure and repo’s mono-repo structure here in context
 
 ## Risks and assumptions
 - Risk: CI red until package.json and scripts are added
@@ -36,18 +41,20 @@ Repository: Hono Backend Mono-Repo Template
 - Assumption: Bun 1.x is the target runtime based on CI matrix
 
 ## Next actionable steps
-1. Define package management and workspace strategy (Bun workspaces or other)
-2. Add top-level package.json with scripts aligned to CI or adjust CI to match actual scripts
-3. Introduce initial source structure as described in the brief (api, shared, db) and minimal hello-world service to make CI pass
-4. Add linting and formatting configs consistent with the planned toolchain
-5. Add unit test scaffolding and at least one integration test target for the CI stages
+1. Maintain [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md) as the source of truth; keep other core docs in sync with it
+2. Create a follow-up task to reconcile or revise the brief if and when we decide to document the mono-repo structure explicitly
+3. Verify CI steps in [.github/workflows/ci.yml](.github/workflows/ci.yml) align with scripts implemented in [package.json](package.json) and workspace packages under [packages/*](packages)
+4. Ensure OpenAPI documentation location is tracked; current path exists at [packages/api/docs](packages/api/docs)
+5. Periodically review this context file to capture any new divergences discovered
 
 ## Coordination checkpoints
 - Confirm whether this repository will host full mono-repo code or a subset that references external templates
 - Confirm database provisioning approach for local and CI (Docker service, managed Postgres, or mock)
 
 ## Status
-- Memory Bank initialization in progress; core documents being written
+- Core Memory Bank files present and aligned with the brief: [brief.md](.agents/rules/memory-bank/brief.md), [product.md](.agents/rules/memory-bank/product.md), [architecture.md](.agents/rules/memory-bank/architecture.md), [tech.md](.agents/rules/memory-bank/tech.md)
+- Divergences between brief and current mono-repo layout are documented here in context
+- Initialization phase for Memory Bank documentation considered complete pending review
 
 ## Acceptance criteria for closing initialization
 - Core Memory Bank files present and populated: brief.md, product.md, context.md, architecture.md, tech.md

@@ -1,81 +1,81 @@
 # Architecture
 
 ## Overview
-A backend mono-repo template built around Domain-Driven Clean Architecture on Hono with Bun runtime. The architecture enforces clear boundaries between domain logic, infrastructure, and delivery, with explicit dependency injection and strong validation and observability practices.
+Domain-Driven Clean Architecture on Hono with the Bun runtime. Clear boundaries separate delivery, application, domain, and infrastructure concerns. Dependencies point inward, validation is explicit at the edges, and operational concerns are addressed with standard middleware and configuration.
 
-- Architectural style: Domain-Driven Design with Clean Architecture boundaries
-- Delivery: Hono HTTP server with OpenAPI and Swagger UI
-- Domain: Entities, Use Cases, Repositories, Models per domain
-- Infrastructure: Database, config, middleware, logging, adapters
-- Shared: Types, utilities, and DI container
-- Persistence: PostgreSQL via Drizzle ORM with migrations
-- Validation: Zod schemas
-- Auth: JWT-based primitives
-- IDs: UUIDv7 for index-friendly identifiers
+Source of truth:
+- brief at .agents/rules/memory-bank/brief.md
 
-Reference documents:
-- Brief at [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md)
-- Product at [.agents/rules/memory-bank/product.md](.agents/rules/memory-bank/product.md)
-- CI pipeline at [.github/workflows/ci.yml](.github/workflows/ci.yml)
+## Project Structure
+The architecture mirrors the structure described in the brief:
 
-## Intended Mono-repo Structure
-While the current repository snapshot is minimal, the intended structure is:
-
-- api service
-  - src/app.ts
-  - src/server.ts
-  - src/domains
-    - auth
-      - entities, usecases, repositories, handlers, routes, models, tests
-    - other domains
-  - src/infrastructure
-    - database, middleware, config, logging
-  - src/shared
-    - types, utils, container
-- shared library
-  - cross-cutting utilities and types
-- db package
-  - migrations and schema
+```
+.
+├── src/
+│   ├── app.ts                  # Hono app setup
+│   ├── server.ts               # Entry point
+│   ├── domains/                # Domain modules
+│   │   ├── auth/               # Complete domain
+│   │   │   ├── entities/
+│   │   │   ├── usecases/
+│   │   │   ├── repositories/
+│   │   │   ├── handlers/
+│   │   │   ├── routes/
+│   │   │   ├── models/
+│   │   │   └── tests/
+│   │   └── posts/              # Another domain
+│   ├── infrastructure/         # Shared infra
+│   │   ├── database/
+│   │   ├── middleware/
+│   │   └── config/
+│   └── shared/                 # Shared components
+│       ├── types/
+│       ├── utils/
+│       └── container/
+├── drizzle/                    # Database migrations
+├── docs/                       # OpenAPI docs
+├── package.json
+├── tsconfig.json
+├── drizzle.config.ts
+└── compose.yml
+```
 
 ## Clean Architecture Boundaries
-- Delivery layer
+- Delivery
   - Hono routes and handlers
-  - Only depends on Use Cases via interfaces
-  - Maps HTTP requests to use case inputs and returns standardized responses
-- Use Case layer
-  - Application-specific business logic
-  - Depends on abstractions of repositories and external services
-  - Orchestrates validation and domain interactions
-- Domain layer
+  - Maps HTTP requests to handlers and returns standardized responses
+  - Depends on use case interfaces only
+- Application (Use Cases)
+  - Orchestrates business rules and workflows
+  - Depends on domain entities and repository interfaces
+- Domain
   - Entities and value objects
   - Pure logic and invariants
-- Infrastructure layer
-  - Concrete implementations of repositories and adapters
-  - Database, configuration, logging, and external integrations
-- Shared layer
+- Infrastructure
+  - Concrete implementations of repository interfaces and adapters
+  - Database, configuration, middleware, logging
+- Shared
   - Types, utilities, DI container, tokens
 
 Dependency rules:
-- Delivery depends inward on Use Cases and shared abstractions
+- Delivery depends inward on Use Cases and shared contracts
 - Use Cases depend inward on Domain and outward only on interfaces
-- Infrastructure depends inward to implement interfaces but not vice versa
+- Infrastructure depends inward to implement interfaces; no inward dependency on infrastructure from core layers
 - Shared has no downstream runtime dependencies
 
 ## Request Lifecycle
 - Routing
   - Hono routes accept HTTP requests and map to handlers
 - Validation
-  - Zod schemas validate inputs and transform to typed models
-- Use Case invocation
-  - Handlers resolve use cases from DI and execute with validated inputs
-- Repository and external calls
-  - Use cases call repository interfaces; DI provides concrete implementations
+  - Zod schemas validate inputs and shape models
+- Use case execution
+  - Handlers resolve use cases from the DI container and invoke them with validated inputs
+- Data access
+  - Use cases call repository ports; DI supplies Drizzle-backed implementations
 - Response shaping
-  - JSend response envelopes with standardized success and error formats
-- Observability and errors
-  - Middleware provides structured logging and safe error handling
-
-Mermaid high-level flow:
+  - JSend envelopes for success and error formats
+- Errors and logging
+  - Middleware coordinates safe error handling and structured logs
 
 ```mermaid
 graph TD
@@ -90,88 +90,70 @@ E --> I[JSend Response]
 I --> J[Client]
 ```
 
-## API Documentation
-- OpenAPI schema generated from route definitions and Zod schemas
-- Swagger UI served as a documentation endpoint
-- Contracts remain synchronized with code through decorators or helper bindings
-
 ## Configuration and Environments
-- Hierarchical configuration using YAML files per environment plus .env overrides
-- Expected precedence
-  - default config
-  - environment specific YAML
-  - .env variables for local overrides
-  - process environment in production
-
-Configuration references:
-- See intended examples in [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md)
+- Hierarchical configuration with YAML per environment plus .env overrides
+- Precedence
+  1. Default/base configuration
+  2. Environment-specific YAML
+  3. .env for local overrides
+  4. Process environment in production
+- Expected keys
+  - server: port, host
+  - database: url
+  - auth.jwt: expiresIn
+  - cors: origins
 
 ## Database and Migrations
-- Drizzle ORM for type-safe schema and queries
-- Migration generation and execution via drizzle-kit
-- Migration workflow
-  - Define schema updates in code
+- Drizzle ORM for schema and queries
+- drizzle-kit for migration generation and application
+- Workflow
+  - Update schema definitions
   - Generate SQL migrations
-  - Apply migrations in CI or deploy steps as appropriate
+  - Apply migrations locally and in CI/deploy
+
+## API Documentation
+- Hono OpenAPI generation
+- Swagger UI endpoint for discoverability
+- Contracts synchronized with schemas and routes
 
 ## Error Handling and Logging
 - Centralized error middleware
-  - Sanitizes error details in production
-  - Maps domain and validation errors to appropriate status codes
-- Structured logging using pino with consistent fields
-  - Correlation identifiers where available
-  - Request scoped context through middleware
+  - Sanitizes details in production
+  - Maps validation and domain errors to appropriate status codes
+- Structured logging via standard middleware patterns
+  - Correlate request context where available
 
 ## Security Considerations
-- JWT-based authentication with expirations and secret management
-- Sensible defaults for CORS with explicit origins
-- Input validation on all public interfaces
-- Avoid leaking internals in error responses
+- JWT-based authentication via Hono JWT middleware
+- Password hashing with bcrypt
+- UUIDv7 identifiers
+- CORS with explicit allowed origins
+- Input validation at all public boundaries
+- Avoid leaking internal details in error responses
 
-## CI and Operational Flow
-The pipeline defined in [.github/workflows/ci.yml](.github/workflows/ci.yml) expresses expected steps:
-- Install dependencies using Bun 1.x
-- Lint and format check
-- Unit and integration tests
-- Docker image build
+## Scripts and Commands
+Reference scripts defined in the brief’s package.json:
 
-Note
-- Scripts referenced by CI must be defined in package.json in the implemented repo structure to pass
-
-Mermaid CI overview:
-
-```mermaid
-graph LR
-X[Push or PR main] --> Y[CI Setup Bun]
-Y --> Z[Install Dependencies]
-Z --> L[Lint]
-Z --> F[Format Check]
-Z --> U[Unit Tests]
-Z --> I[Integration Tests]
-U --> B[Docker Build]
-I --> B
+```json
+{
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "build": "bun build src/server.ts --outdir ./dist",
+    "start": "bun dist/server.js",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "bun src/scripts/migrate.ts",
+    "db:seed": "bun src/scripts/seed.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  }
+}
 ```
 
-## Environment Topology
-- Local development
-  - Bun runtime for server and tests
-  - Local Postgres or containerized Postgres
-  - Hot reload using Bun watch
-- CI
-  - Ubuntu runner with Bun matrix
-  - Optional service container for Postgres when integration tests exist
-- Production
-  - Containerized service with Bun
-  - External managed Postgres or provisioned database
-
-## Open Questions
-- Will the template commit include api, shared, db packages in this repo or use external references
-- Which workspace strategy will be official for the mono-repo
-- How will integration tests provision Postgres in CI
-
 ## Acceptance for Architectural Readiness
-- Clean boundaries codified in folder and dependency graph
-- DI container with tokens for use cases and repositories
-- Validated configuration with environment-aware overrides
-- OpenAPI generated and served
+- Folder structure and dependency direction match Clean Architecture
+- DI container registers use cases and repository implementations by tokens
+- Configuration validated with environment-aware overrides
+- OpenAPI generated and served with Swagger UI
 - Tests cover public use cases and critical adapters

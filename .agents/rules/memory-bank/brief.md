@@ -7,7 +7,7 @@
 - **Runtime:** Bun (fast JavaScript runtime)
 - **HTTP Framework:** Hono.js
 - **DI:** TSyringe (TypeScript DI container)
-- **Config:** dotenv + environment validation
+- **Config:** YAML files + .env + environment validation (hierarchical loading)
 - **Database:** Drizzle ORM + PostgreSQL
 - **Migrations:** Drizzle migrations
 - **JSON Format:** JSend standard
@@ -47,7 +47,7 @@
 ├── package.json
 ├── tsconfig.json
 ├── drizzle.config.ts
-└── docker-compose.yml
+└── compose.yml
 ```
 
 ## Quick Start
@@ -56,8 +56,11 @@
 bun init
 bun add hono drizzle-orm postgres zod tsyringe
 
-# Setup environment
+# Setup configuration
 cp .env.example .env
+# Create environment-specific config
+mkdir -p config
+cp config/development.yaml.example config/development.yaml
 
 # Run migrations
 bun run db:migrate
@@ -150,15 +153,26 @@ bun run start                  # Production
 }
 ```
 
-## Environment Variables
+## Configuration Files
+```yaml
+# config/development.yaml
+server:
+  port: 3000
+  host: 0.0.0.0
+database:
+  url: postgres://user:pass@localhost:5432/db
+auth:
+  jwt:
+    expiresIn: 24h
+cors:
+  origins: ["http://localhost:3000"]
+```
+
 ```env
-PORT=3000
-NODE_ENV=development
-DATABASE_URL=postgres://user:pass@localhost:5432/db
+# .env (local overrides)
+PORT=3001
 JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=24h
-REDIS_URL=redis://localhost:6379
-CORS_ORIGINS=*
+DATABASE_URL=postgres://user:pass@localhost:5432/local_db
 ```
 
 ## Example Domain Implementation

@@ -7,25 +7,41 @@
 
 ## Current Focus
 
-The project is now a **complete production-ready backend template** featuring:
+The project briefs have been updated to implement **mono-repo architecture** with domain-specific Clean Architecture and enhanced database and API tooling:
 
-- Full Clean Architecture implementation with layered structure
-- Complete JWT authentication system with middleware protection
-- Two example domains (Greeting & Posts) demonstrating the full pattern
-- Comprehensive development tooling and testing setup
-- Docker containerization ready for deployment
-- Extensive documentation and developer experience features
+- **Mono-repo structure** where each domain has its own complete Clean Architecture
+- **Domain isolation** with self-contained domain packages
+- **UUIDv7 implementation** for index-friendly database performance
+- **Shared infrastructure** for cross-domain concerns, including standardized API responses (jSend)
+- **Flexible Database Migrations**: Integration of `node-pg-migrate` or `umzug` with `pg` driver for robust schema management
+- **Bun ORM Integration**: Leveraging Bun's ORM and query builder for type-safe SQL queries and data access
+- **Repository Abstractions**: Implementation of repository classes/functions to encapsulate data access and enable mocking
+- **Enhanced Testing**: Support for mocking repository methods with `jest`/`sinon` and database layer tests with `pg-mock`/Bun query mocking
 
-## Recent Major Implementation
+## Recent Major Updates
 
-### Session Completion
-- Implemented complete Clean Architecture structure
+### Architecture Evolution
+- **Updated briefs to mono-repo architecture**: Each domain now has its own complete Clean Architecture implementation
+- **UUIDv7 integration**: Replaced standard UUID with UUIDv7 for better database indexing performance
+- **Domain isolation**: Each domain (`src/domains/{domain}/`) is self-contained with its own layers
+- **Shared infrastructure**: Cross-domain concerns moved to `src/shared/`, including standardized API responses (jSend)
+- **Database Migration Flexibility**: Introduced support for `node-pg-migrate` or `umzug` with `pg` driver for database migrations, alongside Prisma Migrate
+- **Bun ORM for Data Access**: Adopted Bun's ORM and query builder for type-safe SQL interactions
+- **Repository Pattern Refinement**: Emphasized repository interfaces and abstractions for improved testability and data access encapsulation
+- **Enhanced Testing Capabilities**: Integrated `jest`/`sinon` for mocking repository methods and `pg-mock`/Bun query mocking for database layer testing
+- **Hono.js brief updated**: follows mono-repo domain-specific Clean Architecture patterns
+
+### Previous Implementation (Current Running State)
+- Implemented complete Clean Architecture structure (traditional layered approach)
 - Added full JWT authentication system with User domain
 - Created two example domains (Greeting, Posts) with full CRUD operations
 - Setup comprehensive testing with Bun test runner
 - Configured production-ready development tooling (ESLint, Prettier)
 - Implemented Docker containerization with multi-stage builds
 - Created comprehensive documentation and README
+
+### Migration Path
+The current implementation follows traditional Clean Architecture, while the updated briefs propose mono-repo domain-specific architecture for future implementations.
 
 ## Current Implementation State
 

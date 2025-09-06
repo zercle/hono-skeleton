@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import 'reflect-metadata';
-import './infrastructure/container/di.container'; // Initialize DI container
+import './shared/container/di.container'; // Initialize DI container
 import app from './app';
-import { AppConfig } from './infrastructure/config/app.config';
-import { connectDb, disconnectDb } from './infrastructure/database/connection';
+import { AppConfig } from './shared/config/app.config';
+import { connectDb, disconnectDb } from './shared/database/connection';
 
 const port = AppConfig.port;
 

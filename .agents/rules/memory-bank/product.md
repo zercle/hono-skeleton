@@ -2,7 +2,7 @@
 
 ## Project Purpose
 
-This is a **Hono.js Backend Boilerplate Template** designed to provide a standardized, scalable foundation for backend API development using the Bun runtime. The project serves as a starting template for developers who want to quickly bootstrap backend applications with modern tooling and clean architecture principles.
+This is a **Hono.js backend mono-repo template** on the **Bun** runtime that adopts domain-specific Clean Architecture within each domain package. It provides a standardized, scalable foundation for backend API development with clear domain isolation, SOLID principles, and modern tooling out of the box.
 
 ## Problem Statement
 
@@ -17,18 +17,22 @@ Backend project setup often involves repetitive configuration of routing, databa
 
 This boilerplate provides:
 
-- **Standardized Clean Architecture** with clear separation of concerns across layers
-- **Modern Tech Stack** using Hono.js (fast web framework) on Bun runtime (fast JavaScript runtime)
-- **Scalable Project Structure** following domain-driven design principles
-- **Ready-to-use Integrations** for database (Prisma), DI (tsyringe), authentication (JWT)
-- **Development Tooling** with TypeScript, testing, linting, and formatting preconfigured
+- **Domain-specific Clean Architecture**: Each domain package contains a full layered architecture (entities, use cases, repositories, handlers, routes, models, tests) for clear domain isolation and SOLID compliance
+- **Modern Tech Stack**: Hono.js (fast web framework) on Bun runtime (fast JavaScript runtime)
+- **Scalable Mono-Repo Structure**: Domain-driven design with self-contained domain modules
+- **Ready-to-use Integrations**: Prisma ORM for database, tsyringe for dependency injection, JSON Web Tokens for authentication, Bun ORM for type-safe SQL queries
+- **Flexible Database Migrations**: Support for `node-pg-migrate` or `umzug` with `pg` driver for robust database schema evolution
+- **Repository Abstractions**: Encapsulated data access logic through repository classes/functions, enabling mock testing
+- **Standardized API Responses**: JSON API responses formatted according to the `omniti-labs/jsend` specification via middleware/helpers
+- **Comprehensive Testing**: Enhanced testing capabilities with `jest`/`sinon` for mocking repository methods and `pg-mock`/Bun query mocking for database layer tests
+- **Development Tooling**: TypeScript, Bun test runner, ESLint, Prettier configured out of the box
 
 ## Expected User Experience
 
 ### For Developers
 
 - **Quick Setup**: Clone, configure environment, and start developing business logic immediately
-- **Clear Patterns**: Follow established patterns for adding new domains/features
+- **Clear Patterns**: Follow established patterns for adding new domains/features, including database migrations and API response handling
 - **Scalable Growth**: Architecture that grows with project complexity
 - **Developer Productivity**: Hot reload, TypeScript support, and comprehensive tooling
 

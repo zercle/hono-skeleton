@@ -1,25 +1,38 @@
-# Hono.js Backend Boilerplate Template (Bun Runtime)
+# Hono.js Backend Mono-Repo Template (Bun Runtime)
 
 ## 1. Introduction
 
-This document provides a standardized template for initializing new backend projects using **Hono.js** on the **Bun** runtime and package manager. The boilerplate follows **Clean Architecture** and **SOLID principles** to offer a scalable and maintainable foundation for backend systems.
+This document provides a standardized template for initializing new backend mono-repo projects using **Hono.js** on the **Bun** runtime and package manager. The boilerplate follows **Domain-Driven Clean Architecture** with each domain having its own complete Clean Architecture implementation within its domain package, promoting **SOLID principles** and domain isolation.
 
-**Purpose:** Streamline project setup and enforce consistency across backend codebases with Bun-powered Hono.js applications.
+**Purpose:** Streamline mono-repo setup with domain-specific Clean Architecture, ensuring scalability, maintainability, and clear domain boundaries.
 
 ---
 
 ## 2. Core Principles & Architecture
 
-The boilerplate adopts a domain-driven Clean Architecture approach to decouple business logic from infrastructure concerns.
+The boilerplate adopts a **mono-repo with domain-specific Clean Architecture** approach where each domain is a complete, self-contained module with its own layered architecture.
 
-### Layered Architecture
+### Mono-Repo Domain Architecture
 
-- **Presentation/API Layer** (`src/app.ts`, `src/routes/`): Handles HTTP requests and routing with Hono.js.
-- **Handler Layer** (`src/handler/`): Validates requests, invokes use cases, and formats HTTP responses.
-- **Use Case/Service Layer** (`src/usecase/`): Contains business rules and orchestrates repository interactions.
-- **Domain Layer** (`src/domain/`): Defines domain models and interfaces.
-- **Repository/Infrastructure Layer** (`src/repository/`): Implements data persistence using Prisma ORM.
-- **Shared Infrastructure** (`src/infrastructure/`): Contains shared components like database connection, configuration, and middleware.
+Each domain package contains its complete Clean Architecture implementation:
+
+- **Domain Package** (`src/domains/{domain}/`): Complete domain module
+  - **Entities** (`entities/`): Core domain entities and value objects
+  - **Use Cases** (`usecases/`): Domain-specific business logic
+  - **Repositories** (`repositories/`): Domain data access interfaces and implementations  
+  - **Handlers** (`handlers/`): Domain HTTP handlers
+  - **Routes** (`routes/`): Domain-specific route definitions
+  - **Models** (`models/`): DTOs and request/response models
+  - **Tests** (`tests/`): Domain-specific tests
+
+### Shared Infrastructure
+
+- **Shared Infrastructure** (`src/shared/`): Cross-domain shared components
+  - **Database** (`database/`): Prisma client and connection management
+  - **Middleware** (`middleware/`): Authentication, validation, CORS
+  - **Config** (`config/`): Application configuration
+  - **Utils** (`utils/`): Shared utilities and helpers
+  - **Types** (`types/`): Shared TypeScript types
 
 ### Key Tools & Libraries
 
@@ -27,11 +40,11 @@ The boilerplate adopts a domain-driven Clean Architecture approach to decouple b
 | --------------------- | ------------------------------------ |
 | HTTP Framework        | Hono.js                              |
 | Dependency Injection  | tsyringe                             |
-| Database ORM          | Prisma                               |
+| Database ORM          | Prisma, Bun ORM                      |
 | Configuration         | dotenv                               |
-| Migrations            | Prisma Migrate                       |
+| Migrations            | Prisma Migrate, node-pg-migrate or umzug with pg driver |
 | JWT Authentication    | jsonwebtoken                         |
-| UUID Generation       | uuid npm package                     |
+| UUID Generation       | **uuidv7** (index-friendly)         |
 | Validation            | class-validator or custom middleware |
 | Testing               | Bun test runner                      |
 | Linting & Formatting  | ESLint, Prettier                     |
@@ -81,7 +94,7 @@ bun run src/server.ts
 
 ---
 
-## 4. Project Structure Overview
+## 4. Mono-Repo Project Structure Overview
 
 ```
 .
@@ -89,18 +102,65 @@ bun run src/server.ts
 │   ├── schema.prisma
 │   └── migrations/
 ├── src/
-│   ├── app.ts              # Hono app and route registration
-│   ├── server.ts           # Server startup
-│   ├── domain/             # Domain models and interfaces
-│   ├── repository/         # Database repositories
-│   ├── usecase/            # Business logic services
-│   ├── handler/            # HTTP handlers
-│   ├── routes/             # Route definitions
-│   ├── infrastructure/     # DB connections, config, middleware
-│   └── tests/              # Unit and integration tests
+│   ├── app.ts                      # Hono app and route registration
+│   ├── server.ts                   # Server startup
+│   ├── domains/                    # Domain-specific modules
+│   │   ├── auth/                   # Authentication domain
+│   │   │   ├── entities/
+│   │   │   │   └── user.entity.ts
+│   │   │   ├── usecases/
+│   │   │   │   ├── auth.usecase.ts
+│   │   │   │   └── interfaces/
+│   │   │   ├── repositories/
+│   │   │   │   ├── user.repository.ts
+│   │   │   │   └── interfaces/
+│   │   │   ├── handlers/
+│   │   │   │   └── auth.handler.ts
+│   │   │   ├── routes/
+│   │   │   │   └── auth.routes.ts
+│   │   │   ├── models/
+│   │   │   │   └── auth.models.ts
+│   │   │   └── tests/
+│   │   │       ├── auth.usecase.test.ts
+│   │   │       └── auth.handler.test.ts
+│   │   ├── posts/                  # Posts domain
+│   │   │   ├── entities/
+│   │   │   │   └── post.entity.ts
+│   │   │   ├── usecases/
+│   │   │   ├── repositories/
+│   │   │   ├── handlers/
+│   │   │   ├── routes/
+│   │   │   ├── models/
+│   │   │   └── tests/
+│   │   └── greeting/               # Greeting domain (example)
+│   │       ├── entities/
+│   │       ├── usecases/
+│   │       ├── repositories/
+│   │       ├── handlers/
+│   │       ├── routes/
+│   │       ├── models/
+│   │       └── tests/
+│   └── shared/                     # Shared infrastructure
+│       ├── database/
+│       │   ├── connection.ts
+│       │   └── base-repository.ts
+│       ├── middleware/
+│       │   ├── auth.middleware.ts
+│       │   ├── cors.middleware.ts
+│       │   └── validation.middleware.ts
+│       ├── config/
+│       │   └── app.config.ts
+│       ├── utils/
+│       │   ├── uuid.util.ts        # UUIDv7 generator
+│       │   ├── response.util.ts
+│       │   └── validation.util.ts
+│       ├── types/
+│       │   └── common.types.ts
+│       └── container/
+│           └── di.container.ts
 ├── .env.example
 ├── bun.lockb
-├── package.json           # Optional if migrated from npm/yarn
+├── package.json
 ├── tsconfig.json
 ├── Dockerfile
 ├── docker-compose.yml
@@ -109,35 +169,72 @@ bun run src/server.ts
 
 ---
 
-## 5. Adding a New Domain
+## 5. Adding a New Domain (Mono-Repo Approach)
 
-1. **Define DB Schema**
+1. **Create Domain Directory Structure**
 
-Add new models to `prisma/schema.prisma`, run migrations with Bun Prisma CLI.
+```bash
+mkdir -p src/domains/{domain-name}/{entities,usecases,repositories,handlers,routes,models,tests}
+mkdir -p src/domains/{domain-name}/usecases/interfaces
+mkdir -p src/domains/{domain-name}/repositories/interfaces
+```
 
-2. **Implement Repository**
+2. **Define Domain Entity with UUIDv7**
 
-Create repository class in `src/repository/`.
+Create entity in `src/domains/{domain}/entities/` with UUIDv7 ID:
 
-3. **Implement Use Case**
+```typescript
+import { uuidv7 } from '../../shared/utils/uuid.util';
 
-Create business logic service in `src/usecase/`.
+export interface DomainEntity {
+  id: string;  // UUIDv7 for index-friendly ordering
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
 
-4. **Implement Handlers**
+3. **Create Domain Models**
 
-Create HTTP handlers in `src/handler/`.
+Define request/response DTOs in `src/domains/{domain}/models/`.
 
-5. **Define Routes**
+4. **Implement Repository Interface & Implementation**
 
-Add routes in `src/routes/` and register them in `app.ts`.
+- Interface in `src/domains/{domain}/repositories/interfaces/`
+- Implementation in `src/domains/{domain}/repositories/`
 
-6. **Register Dependencies**
+5. **Implement Use Case Interface & Implementation**
 
-Use `tsyringe` container to register new classes.
+- Interface in `src/domains/{domain}/usecases/interfaces/`
+- Implementation in `src/domains/{domain}/usecases/`
 
-7. **Write Tests**
+6. **Implement Handlers**
 
-Use Bun's built-in test runner for unit and integration testing.
+Create HTTP handlers in `src/domains/{domain}/handlers/`.
+
+7. **Define Routes**
+
+Create routes in `src/domains/{domain}/routes/` and register in `app.ts`.
+
+8. **Add Database Schema**
+
+Add new models to `prisma/schema.prisma` with UUIDv7 default:
+
+```prisma
+model DomainModel {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // ... other fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+9. **Register Dependencies**
+
+Update `src/shared/container/di.container.ts` with new domain services.
+
+10. **Write Domain Tests**
+
+Create comprehensive tests in `src/domains/{domain}/tests/`.
 
 ---
 

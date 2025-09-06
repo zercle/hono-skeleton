@@ -26,49 +26,23 @@
   - Modern ES features available
   - Strong type checking throughout
 
-## Implemented Technology Stack (Production-Ready)
+## Key Tools & Libraries
 
-### Database & ORM
+| Feature               | Tool / Library                       |
+| --------------------- | ------------------------------------ |
+| HTTP Framework        | Hono.js                              |
+| Dependency Injection  | tsyringe                             |
+| Database ORM          | Prisma, Bun ORM                      |
+| Configuration         | dotenv                               |
+| Migrations            | Prisma Migrate, node-pg-migrate or umzug with pg driver |
+| JWT Authentication    | jsonwebtoken                         |
+| UUID Generation       | **uuidv7** (index-friendly)         |
+| Validation            | class-validator or custom middleware |
+| Testing               | Bun test runner, Jest, Sinon, pg-mock |
+| Linting & Formatting  | ESLint, Prettier                     |
+| OpenAPI Documentation | swagger-jsdoc + swagger-ui-express   |
+| API Response Format   | jsend (via custom middleware/helper) |
 
-- **Prisma ORM**: Type-safe database client
-  - Schema-first approach
-  - Automatic migration generation
-  - Type-safe query builder
-  - Multi-database support (PostgreSQL, MySQL, SQLite)
-
-### Dependency Injection
-
-- **tsyringe**: Lightweight DI container
-  - Decorator-based injection
-  - Singleton and transient lifetimes
-  - Interface-based service registration
-
-### Authentication & Security
-
-- **jsonwebtoken**: JWT token handling
-- **uuid**: Unique identifier generation
-- **dotenv**: Environment variable management
-
-### Validation
-
-- **class-validator** (or custom middleware): Request validation
-- **class-transformer**: Object transformation
-
-### Development Tools
-
-- **ESLint**: Code linting
-- **Prettier**: Code formatting
-- **Bun Test Runner**: Native testing framework
-
-### API Documentation
-
-- **swagger-jsdoc**: OpenAPI specification generation
-- **swagger-ui-express**: Interactive API documentation
-
-### Containerization
-
-- **Docker**: Application containerization
-- **Docker Compose**: Local development environment
 
 ## Current Development Setup (Production-Ready)
 
@@ -153,6 +127,20 @@
 - `bun run docker:down` - Stop Docker Compose stack
 
 **Server Status:** Currently running on `http://localhost:3000`
+
+## Architecture Evolution Notes
+
+### Mono-Repo Update
+The project briefs have been updated to implement **mono-repo architecture**:
+- **Domain-specific Clean Architecture**: Each domain (`src/domains/{domain}/`) contains its complete layered architecture
+- **UUIDv7 integration**: Better database indexing performance compared to standard UUIDs
+- **Shared infrastructure**: Cross-domain concerns moved to `src/shared/` (database, middleware, config, utils)
+- **Domain isolation**: Self-contained domain packages with their own entities, usecases, repositories, handlers, routes, models, and tests
+
+### Current vs Updated Architecture
+- **Current implementation**: Traditional Clean Architecture with shared layers
+- **Updated briefs**: Mono-repo with domain-specific Clean Architecture
+- **Migration path**: Future implementations can follow the updated mono-repo patterns
 
 ## Development Environment Requirements
 

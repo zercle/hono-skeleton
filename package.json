@@ -3,28 +3,37 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "test": "bun test",
+    "test:unit": "bun test src/domains/greeting/tests/",
+    "test:integration": "bun test tests/",
     "test:watch": "bun test --watch",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "bun build src/index.ts --outdir dist",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "docker:build": "docker build -t hono-skeleton .",
     "docker:run": "docker run -p 3000:3000 hono-skeleton",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "job:worker": "bun run src/scripts/worker.ts",
+    "job:producer": "bun run src/scripts/producer.ts"
   },
   "dependencies": {
     "hono": "^4.9.6",
     "prisma": "^5.17.0",
     "@prisma/client": "^5.17.0",
+    "bullmq": "^5.10.2",
+    "ioredis": "^5.4.1",
     "tsyringe": "^4.8.0",
     "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",
     "uuid": "^10.0.0",
     "class-validator": "^0.14.2",
     "class-transformer": "^0.5.1",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "supertest": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

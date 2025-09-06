@@ -1,0 +1,1 @@
+// Global use case interfaces

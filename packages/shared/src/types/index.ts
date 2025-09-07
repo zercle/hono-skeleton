@@ -34,7 +34,18 @@ export interface Config {
     host: string;
   };
   database: {
-    url: string;
+    host?: string;
+    port?: number;
+    name?: string;
+    user?: string;
+    password?: string;
+    url?: string;
+  };
+  cache?: {
+    host?: string;
+    port?: number;
+    password?: string;
+    url?: string;
   };
   auth: {
     jwt: {

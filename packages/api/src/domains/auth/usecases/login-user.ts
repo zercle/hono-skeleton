@@ -1,14 +1,14 @@
 import { compare } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
+import { sign } from 'jsonwebtoken'; // Remove JwtPayload and Algorithm imports
 import { injectable, inject } from 'tsyringe';
-import { User } from '../entities/user';
-import { IUserRepository } from '../repositories/user-repository';
+import { type User } from '../entities/user';
+import { type IUserRepository } from '../repositories/user-repository';
 import { LoginUserInputSchema } from '../models/schemas';
 import {
   ConfigToken,
   UserRepositoryToken,
 } from '@zercle/shared/container/tokens';
-import { IConfigService } from '../../infrastructure/config/config.interface';
+import { type IConfigService } from '@/infrastructure/config/config.interface';
 
 interface LoginUserInput {
   email: string;
@@ -17,13 +17,7 @@ interface LoginUserInput {
 
 interface LoginUserOutput {
   token: string;
-  user: {
-    id: string;
-    email: string;
-    name?: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  user: Pick<User, 'id' | 'email' | 'name' | 'createdAt' | 'updatedAt'>;
 }
 
 @injectable()
@@ -46,7 +40,7 @@ export class LoginUserUseCase {
     // Compare passwords
     const isPasswordValid = await compare(
       validatedInput.password,
-      user.passwordHash
+      user.password
     );
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
@@ -56,13 +50,17 @@ export class LoginUserUseCase {
     const jwtSecret = this.configService.get<string>('jwt.secret');
     const expiresIn = this.configService.get<string>('jwt.expiresIn');
 
-    const token = sign(
+    if (!jwtSecret) {
+      throw new Error('JWT secret is not configured.');
+    }
+
+    const token = (sign as any)(
       {
         userId: user.id,
         email: user.email,
-      },
+      } as any, // Cast payload to any
       jwtSecret,
-      { expiresIn: expiresIn }
+      { expiresIn, algorithm: 'HS256' as any }
     );
 
     // Return token and public user data

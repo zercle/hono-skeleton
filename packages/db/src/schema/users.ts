@@ -5,7 +5,7 @@ export const users = pgTable('users', {
   id: varchar('id', { length: 36 }).primaryKey(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: text('password').notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }), // Allow null for name
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

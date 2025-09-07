@@ -5,10 +5,10 @@ export interface IConfigService {
 export interface DatabaseConfig {
   host?: string;
   port?: number;
-  database?: string;
-  username?: string;
+  name?: string;
+  user?: string;
   password?: string;
-  url: string;
+  url?: string;
 }
 
 export interface JwtConfig {
@@ -29,10 +29,23 @@ export interface LoggingConfig {
   level: string;
 }
 
+export interface CacheConfig {
+  host?: string;
+  port?: number;
+  password?: string;
+  url?: string;
+}
+
 export interface AppConfig {
   server: ServerConfig;
   database: DatabaseConfig;
+  cache?: CacheConfig;
   jwt: JwtConfig;
   bcrypt: BcryptConfig;
   logging: LoggingConfig;
+  cors?: CorsConfig;
+}
+
+export interface CorsConfig {
+  origins: string[];
 }

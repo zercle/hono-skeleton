@@ -1,13 +1,11 @@
-import { Hono } from 'hono';
-import { container } from 'tsyringe';
+import { Context, Next } from 'hono';
+import { DependencyContainer } from 'tsyringe';
 import { ILogger } from '../infrastructure/logging/logger.interface';
-import { LoggerToken } from '../../shared/src/container/tokens';
+import { LoggerToken } from '@zercle/shared/container/tokens';
 
-export const loggerMiddleware = async (
-  c: Hono.Context,
-  next: Hono.Next
-): Promise<Response | undefined> => {
-  const logger = container.resolve<ILogger>(LoggerToken);
+export const loggerMiddleware = (diContainer: DependencyContainer) => {
+  return async (c: Context, next: Next): Promise<Response | undefined> => {
+    const logger = diContainer.resolve<ILogger>(LoggerToken);
   const start = Date.now();
 
   // Add request ID if available
@@ -19,7 +17,8 @@ export const loggerMiddleware = async (
   logger.info('Incoming request', {
     method: c.req.method,
     url: c.req.url,
-    headers: Object.fromEntries(c.req.header()),
+    // Cast c.req.header() to Iterable<readonly [string, string]>
+    headers: Object.fromEntries(Object.entries(c.req.header())), // Use Object.entries for Record<string, string>
     requestId,
   });
 
@@ -35,4 +34,6 @@ export const loggerMiddleware = async (
     duration,
     requestId,
   });
+  return c.res; // Explicitly return the response
+  };
 };

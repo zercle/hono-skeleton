@@ -3,8 +3,8 @@ import { z } from 'zod';
 export interface User {
   id: string;
   email: string;
-  passwordHash: string;
-  name?: string;
+  password: string; // Changed from passwordHash
+  name: string | null; // Changed to explicitly allow null
   createdAt: Date;
   updatedAt: Date;
 }

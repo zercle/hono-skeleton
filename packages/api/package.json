@@ -5,12 +5,13 @@
   "main": "./src/server.ts",
   "scripts": {
     "dev": "bun --watch src/server.ts",
-    "build": "bun build src/server.ts --outdir ../../dist/api",
-    "start": "bun ../../dist/api/server.js",
-    "lint": "eslint \"src/**/*.{ts,tsx,js}\"",
+    "build": "bun build src/server.ts --outdir ./dist",
+    "start": "bun dist/server.js",
     "test": "bun test",
-    "test:unit": "bun test --filter unit",
-    "test:integration": "bun test --filter integration"
+    "test:watch": "bun test --watch",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts",
+    "docs:gen": "bun scripts/generate-openapi.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -30,7 +31,11 @@
   "devDependencies": {
     "@types/node": "^22.7.4",
     "drizzle-kit": "^0.23.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "@types/bun": "latest",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/js-yaml": "^4.0.9"
   },
   "engines": {
     "bun": ">=1.0.0 <2"

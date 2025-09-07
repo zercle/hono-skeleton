@@ -1,8 +1,11 @@
-import { OpenAPIHono, createRoute, zValidator } from '@hono/zod-openapi';
-import { container } from 'tsyringe';
+import 'reflect-metadata'; // Ensure reflect-metadata is loaded
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
+import { DependencyContainer } from 'tsyringe';
+import { Context } from 'hono'; // Import Context
 import {
   RegisterUserUseCaseToken,
   LoginUserUseCaseToken,
+  UserRepositoryToken,
 } from '@zercle/shared/container/tokens';
 import { z } from 'zod';
 import { RegisterUserUseCase } from './usecases/register-user';
@@ -13,19 +16,11 @@ import {
   UserResponseSchema,
 } from './models/schemas';
 import { createAuthHandler } from './handlers/auth-handler';
+import { jwtMiddleware } from '../../middleware/jwt'; // Import the new JWT middleware
+import { IUserRepository } from './repositories/user-repository';
 
-export function registerAuthRoutes(app: OpenAPIHono) {
-  const registerUserUseCase = container.resolve<RegisterUserUseCase>(
-    RegisterUserUseCaseToken
-  );
-  const loginUserUseCase = container.resolve<LoginUserUseCase>(
-    LoginUserUseCaseToken
-  );
-
-  const authHandler = createAuthHandler({
-    registerUserUseCase,
-    loginUserUseCase,
-  });
+export function registerAuthRoutes(app: OpenAPIHono, diContainer: DependencyContainer) {
+  const authHandler = createAuthHandler(diContainer); // Pass diContainer to authHandler
 
   const registerRoute = createRoute({
     method: 'post',
@@ -105,4 +100,52 @@ export function registerAuthRoutes(app: OpenAPIHono) {
 
   app.openapi(registerRoute, authHandler.handleRegister);
   app.openapi(loginRoute, authHandler.handleLogin);
+
+  // New route for /me, protected by jwtMiddleware
+  const meRoute = createRoute({
+    method: 'get',
+    path: '/me',
+    responses: {
+      200: {
+        description: 'Current user profile',
+        content: {
+          'application/json': {
+            schema: UserResponseSchema, // Reuse existing user schema
+          },
+        },
+      },
+      401: {
+        description: 'Unauthorized',
+      },
+    },
+    summary: 'Get current user profile',
+    description: 'Retrieves the profile of the authenticated user.',
+  });
+
+  app.openapi(meRoute, jwtMiddleware(diContainer), async (c: Context): Promise<z.infer<typeof UserResponseSchema> | Response> => {
+    // Access the decoded user from the context, set by jwtMiddleware
+    const { id: userIdFromToken } = c.get('user');
+
+    // Resolve UserRepository via DI
+    const userRepository = diContainer.resolve<IUserRepository>(UserRepositoryToken);
+
+    // Fetch user data from DB using the ID from the token
+    const user = await userRepository.findById(userIdFromToken);
+
+    if (!user) {
+      // This case should ideally not happen if token is valid and user exists
+      // Throw an error, error middleware will handle the response
+      throw new Error('User not found');
+    }
+
+    // Return minimal user profile
+    // The openapi handler expects the raw data, not a Hono Response
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  });
 }

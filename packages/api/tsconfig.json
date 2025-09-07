@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
@@ -10,6 +9,7 @@
       "@zercle/db": ["../db/src/index.ts"],
       "@zercle/db/*": ["../db/src/*"]
     },
+    "rootDir": "../../",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },

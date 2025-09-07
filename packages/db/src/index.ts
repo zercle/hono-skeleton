@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import * as schema from './schema';
 
 const connectionString =
-  process.env.DATABASE_URL ||
+  process.env.DB_URL ||
   'postgres://postgres:postgres@localhost:5432/hono_skeleton';
 
 // Disable prepare for database connectivity issues

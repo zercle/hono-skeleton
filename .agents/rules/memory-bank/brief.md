@@ -172,7 +172,7 @@ cors:
 # .env (local overrides)
 PORT=3001
 JWT_SECRET=your-secret-key
-DATABASE_URL=postgres://user:pass@localhost:5432/local_db
+DB_URL=postgres://user:pass@localhost:5432/local_db
 ```
 
 ## Example Domain Implementation

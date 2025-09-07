@@ -1,5 +1,6 @@
 import { DependencyContainer } from 'tsyringe';
 import { TOKENS } from './tokens';
+import { PinoLoggerService } from '../../api/src/infrastructure/logging/pino-logger.service';
 
 // Define types for the registration options
 export interface RegisterOptions {
@@ -67,13 +68,12 @@ export function registerDependencies(
   }
 
   if (options?.logger) {
-    targetContainer?.register(TOKENS.Logger, { useValue: options.logger });
+    targetContainer?.register(TOKENS.Logger, { useValue: options.logger, lifecycle: 'Singleton' });
   } else {
-    // Register a placeholder that throws if not provided
+    // Register PinoLoggerService as the default logger implementation
     targetContainer?.register(TOKENS.Logger, {
-      useFactory: () => {
-        throw new Error('Logger implementation is required but not provided');
-      },
+      useClass: PinoLoggerService,
+      lifecycle: 'Singleton',
     });
   }
 

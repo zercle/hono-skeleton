@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "ES2020",
     "moduleResolution": "node",
-    "lib": ["ES2020"],
+    "lib": ["ES2020", "dom"],
     "types": ["node"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -28,12 +28,7 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "strictBindCallApply": true,
-    "strictCaller": true,
     "strictPropertyInitialization": true,
-    "strictReturnChecks": true,
-    "strictThis": true,
-    "strictUndefinedChecks": true,
-    "strictUnknownChecks": true,
     "useUnknownInCatchVariables": true
   }
 }

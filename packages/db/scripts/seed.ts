@@ -1,59 +1,53 @@
 #!/usr/bin/env bun
 
-import { Client } from 'postgres';
-import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import { db } from '../src/client';
+import { users } from '../src/schema/users';
+import { eq } from 'drizzle-orm';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import 'dotenv/config'; // Load environment variables from .env file
 
-async function seedDatabase() {
-  const databaseUrl = process.env.DATABASE_URL;
+async function runSeed() {
+  console.log('Starting DB seed...');
 
+  const databaseUrl = process.env['DB_URL'];
   if (!databaseUrl) {
-    console.error('DATABASE_URL environment variable is required');
+    console.error('DB_URL environment variable is required.');
     process.exit(1);
   }
-
-  const client = new Client(databaseUrl);
 
   try {
-    await client.connect();
+    const adminEmail = 'admin@example.com';
+    const existingAdmin = await db.query.users.findFirst({
+      where: eq(users.email, adminEmail),
+    });
 
-    // Check if test user already exists
-    const existingUser = await client.query<{
-      id: string;
-      email: string;
-    }>('SELECT id, email FROM users WHERE email = $1', ['test@example.com']);
-
-    if (existingUser.rows.length > 0) {
-      console.log('Test user already exists');
-      console.log(`Email: test@example.com`);
-      console.log(`User ID: ${existingUser.rows[0].id}`);
-      return;
+    if (!existingAdmin) {
+      console.log(`Seeding default admin user: ${adminEmail}`);
+      const hashedPassword = await bcrypt.hash('password', 10); // Hash a default password
+      // Drizzle requires 'id' for insertion; generate a UUID
+      await db.insert(users).values({
+        id: crypto.randomUUID(), // Generate a UUID for the primary key
+        name: 'Admin User',
+        email: adminEmail,
+        password: hashedPassword,
+      });
+      console.log('Default admin user seeded successfully.');
+    } else {
+      console.log(`Admin user ${adminEmail} already exists, skipping seed.`);
     }
-
-    // Hash the test password
-    const passwordHash = await bcrypt.hash('password123', 10);
-
-    // Insert test user
-    const newUser = await client.query<{
-      id: string;
-    }>(
-      'INSERT INTO users (id, email, password_hash, name) VALUES ($1, $2, $3, $4) RETURNING id',
-      [uuidv4(), 'test@example.com', passwordHash, 'Test User']
-    );
-
-    console.log('Test user created successfully');
-    console.log(`Email: test@example.com`);
-    console.log(`Password: password123`);
-    console.log(`User ID: ${newUser.rows[0].id}`);
   } catch (error) {
-    console.error('Seeding failed:', error);
+    console.error('DB seed failed:', error);
     process.exit(1);
   } finally {
-    await client.end();
+    // Assuming 'db' instance manages its own connection pool and doesn't require explicit end()
+    // If the underlying driver needs to be explicitly closed, uncomment and adjust:
+    // await (db as any).end(); // Example if db has an end method
   }
+  console.log('DB seed completed.');
 }
 
-seedDatabase().catch(error => {
-  console.error('Unexpected error:', error);
+runSeed().catch(error => {
+  console.error('Unexpected error during seed:', error);
   process.exit(1);
 });

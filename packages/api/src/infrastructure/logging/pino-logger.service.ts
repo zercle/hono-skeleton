@@ -2,7 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import pino, { Logger as PinoLogger, LevelWithSilent } from 'pino';
 import { ILogger } from './logger.interface';
 import { IConfigService } from '../config/config.interface';
-import { ConfigToken } from '../../../shared/src/container/tokens';
+import { ConfigToken } from '@zercle/shared/container/tokens';
 
 @injectable()
 export class PinoLoggerService implements ILogger {

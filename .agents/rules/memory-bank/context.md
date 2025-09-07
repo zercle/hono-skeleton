@@ -3,64 +3,128 @@
 Repository: Hono Backend Mono-Repo Template
 
 ## Current focus
-- Initialize and populate Memory Bank with authoritative, minimal-yet-useful documentation for continuity across sessions
-- Capture architecture intent from template brief and align with operational signals from repo
+- Align Memory Bank and repo plans with:
+  - Hono Framework on Bun (current stable)
+  - Database: PostgreSQL 17 as primary
+  - Cache: Valkey 8 (Redis-compatible) replacing Redis
+  - Configuration conventions:
+    - DB_* preferred with DB_URL fallback
+    - VALKEY_* preferred with VALKEY_URL fallback (redis:// URL acceptable with Valkey)
+  - Transitional support to avoid breaking existing environments
 
 ## Sources of truth in repo
 - Project brief at [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md)
 - Product definition at [.agents/rules/memory-bank/product.md](.agents/rules/memory-bank/product.md)
-- CI workflow at [.github/workflows/ci.yml](.github/workflows/ci.yml)
-- Workflows note at [.github/workflows/README.md](.github/workflows/README.md)
+- Architecture at [.agents/rules/memory-bank/architecture.md](.agents/rules/memory-bank/architecture.md)
+- Tech guide at [.agents/rules/memory-bank/tech.md](.agents/rules/memory-bank/tech.md)
+- Root environment example at [.env.example](.env.example)
+- Config service at [packages/api/src/infrastructure/config/config.service.ts](packages/api/src/infrastructure/config/config.service.ts)
+- Docker Compose at [compose.yml](compose.yml)
+- DB config at [packages/db/drizzle.config.ts](packages/db/drizzle.config.ts)
+- DB client at [packages/db/src/index.ts](packages/db/src/index.ts)
+- Shared config types at [packages/shared/src/types/index.ts](packages/shared/src/types/index.ts)
 
 ## Repository state snapshot
-- Repository is organized as a Bun + Hono mono-repo with source code present under [packages/api](packages/api), [packages/db](packages/db), and [packages/shared](packages/shared)
-- The Memory Bank brief describes a single-app src/ layout; this is an intentional divergence captured here
-- CI workflows exist under [.github/workflows/ci.yml](.github/workflows/ci.yml); a root [package.json](package.json) and workspace packages are present
-
-## Implications
-- Core Memory Bank docs mirror the brief exactly by directive; any divergence from the current mono-repo implementation is documented here in context
-- Ensure CI steps in [.github/workflows/ci.yml](.github/workflows/ci.yml) map to implemented scripts at the root [package.json](package.json) and/or workspace packages under [packages/*](packages)
-- Consumers should treat [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md) as architectural intent; context highlights where the live repo differs
+- Mono-repo with packages:
+  - API service at [packages/api](packages/api)
+  - Database package (Drizzle schema, migrations, scripts) at [packages/db](packages/db)
+  - Shared utilities and DI tokens at [packages/shared](packages/shared)
+- Compose services in [compose.yml](compose.yml):
+  - PostgreSQL 17: image postgres:17-alpine (OK)
+  - Redis 7: image redis:7-alpine (to be replaced by Valkey 8)
+  - API service uses DB_URL; no DB_* or VALKEY_* vars yet
+- Configuration code paths:
+  - [packages/api/src/infrastructure/config/config.service.ts](packages/api/src/infrastructure/config/config.service.ts) currently maps `database.url` from `DB_URL` and does not assemble from DB_*
+  - [packages/shared/src/types/index.ts](packages/shared/src/types/index.ts) includes `database.url` and lacks cache config shape
+  - No cache client or adapters yet (Valkey not referenced)
+- DB tooling:
+  - [packages/db/drizzle.config.ts](packages/db/drizzle.config.ts) reads `process.env.DB_URL` only
+  - [packages/db/src/index.ts](packages/db/src/index.ts) constructs connection from `process.env.DB_URL` only
 
 ## Decisions captured
-- Adopt Domain-Driven Clean Architecture with Hono on Bun as per brief
-- Use Drizzle ORM with PostgreSQL for persistence
-- Use Zod for validation, TSyringe for DI, JWT for auth, UUIDv7 for identifiers, and JSend response format
+- Framework/runtime: Hono on Bun (current stable 1.x)
+- Persistence: PostgreSQL 17 with Drizzle ORM; SQLite allowed for tests/in-memory
+- Caching: Valkey 8 (Redis protocol compatible) replaces Redis
+- Configuration:
+  - Prefer DB_* (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD) with DB_URL fallback
+  - Prefer VALKEY_* (VALKEY_HOST, VALKEY_PORT, VALKEY_PASSWORD optional) with VALKEY_URL fallback (redis:// URL acceptable)
+- Documentation reflects cache addition and version pins in architecture and tech guides
 
 ## Recent updates
-- Updated core docs to strictly mirror the brief:
-  - [.agents/rules/memory-bank/product.md](.agents/rules/memory-bank/product.md)
-  - [.agents/rules/memory-bank/architecture.md](.agents/rules/memory-bank/architecture.md)
-  - [.agents/rules/memory-bank/tech.md](.agents/rules/memory-bank/tech.md)
-- Confirmed CI workflow presence at [.github/workflows/ci.yml](.github/workflows/ci.yml)
-- Documented divergence between brief’s single-app structure and repo’s mono-repo structure here in context
+- Updated tech guide to include:
+  - Bun current stable, Postgres 17, Valkey 8
+  - VALKEY_* conventions and examples
+- Updated architecture to:
+  - Include Valkey in Infrastructure and Request Lifecycle (optional caching)
+  - Add config keys for VALKEY_*
+  - Update diagram to include cache node
+- Updated product to:
+  - List Valkey 8 in Core Value and Key Features
+  - Add cache configuration conventions
 
-## Risks and assumptions
-- Risk: CI red until package.json and scripts are added
-- Assumption: This repo is an early scaffold of the template; code will be introduced in subsequent commits or via template sync
-- Assumption: Bun 1.x is the target runtime based on CI matrix
+## Compose review and deltas
+- PostgreSQL service already at 17-alpine (meets decision)
+- Cache service is Redis 7; change to Valkey 8:
+  - Replace `redis:7-alpine` with `valkey/valkey:8-alpine`
+  - Healthcheck should use `valkey-cli ping` (or keep `redis-cli ping` if image includes it; prefer `valkey-cli`)
+- API service environment:
+  - Currently uses `DB_URL` only
+  - Add cache environment variables:
+    - `VALKEY_HOST=valkey`
+    - `VALKEY_PORT=6379`
+    - optionally `VALKEY_PASSWORD` if configured
+  - Consider adding DB_* variables for parity; keep `DB_URL` for backward compatibility until code supports assembly
+
+## Implications
+- Introduce cache configuration and optional adapters for read-through/write-through patterns
+- Maintain backward compatibility with existing DB_URL while adding DB_* assembly
+- Provide environment examples for VALKEY_* and document migration from Redis to Valkey
+- CI and local dev flows should use Valkey image and variables
 
 ## Next actionable steps
-1. Maintain [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md) as the source of truth; keep other core docs in sync with it
-2. Create a follow-up task to reconcile or revise the brief if and when we decide to document the mono-repo structure explicitly
-3. Verify CI steps in [.github/workflows/ci.yml](.github/workflows/ci.yml) align with scripts implemented in [package.json](package.json) and workspace packages under [packages/*](packages)
-4. Ensure OpenAPI documentation location is tracked; current path exists at [packages/api/docs](packages/api/docs)
-5. Periodically review this context file to capture any new divergences discovered
+1. Config: Support DB_* assembly and add cache config mapping
+   - Update [packages/api/src/infrastructure/config/config.service.ts](packages/api/src/infrastructure/config/config.service.ts) to:
+     - Assemble `database.url` from DB_* if present; fallback to `DB_URL`
+     - Map `cache` from VALKEY_*; fallback to `VALKEY_URL`
+   - Extend types in [packages/shared/src/types/index.ts](packages/shared/src/types/index.ts) to include:
+     - `cache: { host: string; port: number; password?: string; url?: string }`
+   - Extend interfaces in [packages/api/src/infrastructure/config/config.interface.ts](packages/api/src/infrastructure/config/config.interface.ts) to include cache shape
+2. Add cache adapter scaffolding (optional, non-blocking)
+   - Create a thin Valkey client wrapper under `packages/api/src/infrastructure/cache/` to centralize connection logic
+   - Register via DI only where needed; default to disabled if env not provided
+3. Compose migration
+   - Replace Redis service with Valkey 8 in [compose.yml](compose.yml)
+   - Add `VALKEY_HOST` and `VALKEY_PORT` to API service environment block
+4. Environment examples
+   - Update [.env.example](.env.example) with DB_* (commented) and VALKEY_* examples; retain DB_URL fallback
+5. Drizzle and DB scripts
+   - In [packages/db/drizzle.config.ts](packages/db/drizzle.config.ts), assemble URL from DB_* if present before falling back to DB_URL
+6. Documentation refresh
+   - Update [packages/db/README.md](packages/db/README.md) to mention PostgreSQL 17 and DB_* usage
+   - Add brief cache section in API README or domain docs when cache is first used
 
 ## Coordination checkpoints
-- Confirm whether this repository will host full mono-repo code or a subset that references external templates
-- Confirm database provisioning approach for local and CI (Docker service, managed Postgres, or mock)
+- Select Valkey client library for Bun compatibility (e.g., node-redis works with Valkey via redis protocol; evaluate alternatives if needed)
+- Secret handling for `VALKEY_PASSWORD` and database credentials in CI/CD
+- Confirm healthcheck tooling available in Valkey image (use `valkey-cli ping`)
+
+## Proposed updates to brief.md (do not edit directly)
+- Key Tools & Libraries:
+  - Add: Caching: Valkey 8 (Redis-compatible)
+  - Clarify: Database: PostgreSQL 17
+- Configuration:
+  - Document `VALKEY_*` with `VALKEY_URL` fallback alongside DB_* conventions
+- Quick Start:
+  - Optional note to run Valkey via Docker Compose
 
 ## Status
-- Core Memory Bank files present and aligned with the brief: [brief.md](.agents/rules/memory-bank/brief.md), [product.md](.agents/rules/memory-bank/product.md), [architecture.md](.agents/rules/memory-bank/architecture.md), [tech.md](.agents/rules/memory-bank/tech.md)
-- Divergences between brief and current mono-repo layout are documented here in context
-- Initialization phase for Memory Bank documentation considered complete pending review
+- Architecture, Tech, and Product Memory Bank files updated to include Postgres 17 and Valkey 8
+- Compose reviewed; changes required to replace Redis with Valkey and add VALKEY_* envs
+- Code not yet updated for DB_* assembly or cache support
 
-## Acceptance criteria for closing initialization
-- Core Memory Bank files present and populated: brief.md, product.md, context.md, architecture.md, tech.md
-- Next actions agreed and tracked
-- CI expectations documented and reconciled with actual scripts
-
-## Owners and stakeholders
-- Technical lead: Kilo Code
-- Repo owner: please add handle in [.agents/rules/memory-bank/brief.md](.agents/rules/memory-bank/brief.md) if different
+## Acceptance criteria for this update
+- Memory Bank reflects:
+  - Hono + Bun runtime focus
+  - PostgreSQL 17 and Valkey 8 with configuration conventions
+  - Compose migration path from Redis to Valkey
+  - Concrete next steps with file-level targets for config and types

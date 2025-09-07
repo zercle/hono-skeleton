@@ -4,15 +4,18 @@
   "private": false,
   "main": "./src/index.ts",
   "scripts": {
-    "migrate": "node --input-type=module -e \"import('./scripts/migrate.js')\" || bun run ./scripts/migrate.ts",
-    "generate": "drizzle-kit generate:pg",
-    "seed": "node --input-type=module -e \"import('./scripts/seed.js')\" || bun run ./scripts/seed.ts",
-    "lint": "eslint \"src/**/*.{ts,tsx,js}\""
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "bun scripts/migrate.ts",
+    "db:seed": "bun scripts/seed.ts",
+    "db:check": "bun scripts/check.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "drizzle-kit": "^0.23.1",
     "drizzle-orm": "^0.32.1",
-    "postgres": "^3.4.4",
-    "drizzle-kit": "^0.23.1"
+    "postgres": "^3.4.4"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",

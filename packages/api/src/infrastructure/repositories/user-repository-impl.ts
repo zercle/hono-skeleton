@@ -1,8 +1,8 @@
 import { injectable } from 'tsyringe';
 import { IUserRepository } from '../../domains/auth/repositories/user-repository';
 import { User } from '../../domains/auth/entities/user';
-import { db } from '@zercle/db';
-import { users } from '@zercle/db/schema';
+import { getDbClient } from '@zercle/db/client'; // Import the db client from the new module
+import { users } from '@zercle/db/schema/users'; // Import the users schema
 import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
@@ -10,31 +10,39 @@ import { uuidv7 } from 'uuidv7';
 export class UserRepositoryImpl implements IUserRepository {
   async create(userData: {
     email: string;
-    passwordHash: string;
-    name?: string;
+    password: string;
+    name?: string | null;
   }): Promise<User> {
+    const db = getDbClient(); // Get the db client instance
+
     const newUser = {
       id: uuidv7(),
       email: userData.email,
-      password: userData.passwordHash, // Maps to the password field in schema
+      password: userData.password, // Use directly from input
       name: userData.name || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    const [insertedUser] = await db.insert(users).values(newUser).returning();
+    const result = await db.insert(users).values(newUser).returning();
+    const insertedUser = result[0]; // Get the first element from the returned array
+
+    if (!insertedUser) {
+      throw new Error('Failed to create user: No user returned after insertion.');
+    }
 
     return {
       id: insertedUser.id,
       email: insertedUser.email,
-      passwordHash: insertedUser.password,
-      name: insertedUser.name || undefined,
+      password: insertedUser.password,
+      name: insertedUser.name,
       createdAt: insertedUser.createdAt,
       updatedAt: insertedUser.updatedAt,
-    };
+    } as User; // Cast to User to satisfy the return type
   }
 
   async findByEmail(email: string): Promise<User | null> {
+    const db = getDbClient(); // Get the db client instance
     const [user] = await db
       .select()
       .from(users)
@@ -48,14 +56,15 @@ export class UserRepositoryImpl implements IUserRepository {
     return {
       id: user.id,
       email: user.email,
-      passwordHash: user.password,
-      name: user.name || undefined,
+      password: user.password,
+      name: user.name,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-    };
+    } as User; // Cast to User to satisfy the return type
   }
 
   async findById(id: string): Promise<User | null> {
+    const db = getDbClient(); // Get the db client instance
     const [user] = await db
       .select()
       .from(users)
@@ -69,10 +78,10 @@ export class UserRepositoryImpl implements IUserRepository {
     return {
       id: user.id,
       email: user.email,
-      passwordHash: user.password,
-      name: user.name || undefined,
+      password: user.password,
+      name: user.name,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-    };
+    } as User; // Cast to User to satisfy the return type
   }
 }

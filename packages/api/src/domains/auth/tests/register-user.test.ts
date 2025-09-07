@@ -12,9 +12,10 @@ const mockUserRepository: IUserRepository = {
 };
 
 const mockConfigService: IConfigService = {
-  get: mock((key: string) => {
-    if (key === 'bcrypt.rounds') return 10;
-    return 'mock-value';
+  get: mock(<T>(key: string): T => {
+    if (key === 'bcrypt.rounds') return 10 as T;
+    // Add other mocked config values as needed for tests
+    return 'mock-value' as T;
   }),
 };
 
@@ -40,7 +41,7 @@ describe('RegisterUserUseCase - unit', () => {
     const mockUser: User = {
       id: 'test-id',
       email: 'test@example.com',
-      passwordHash: 'hashed-password',
+      password: 'hashed-password',
       name: 'Test User',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -74,7 +75,7 @@ describe('RegisterUserUseCase - unit', () => {
     const existingUser: User = {
       id: 'existing-id',
       email: 'test@example.com',
-      passwordHash: 'existing-hash',
+      password: 'existing-hash',
       name: 'Existing User',
       createdAt: new Date(),
       updatedAt: new Date(),

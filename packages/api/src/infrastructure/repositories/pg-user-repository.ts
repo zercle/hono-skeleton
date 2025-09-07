@@ -9,16 +9,16 @@ export class PgUserRepository implements IUserRepository {
 
   async create(user: {
     email: string;
-    passwordHash: string;
-    name?: string;
+    password: string; // Changed from passwordHash
+    name?: string | null; // Changed to explicitly allow null
   }): Promise<User> {
     const [newUser] = await this.db
       .insert(users)
       .values({
         id: crypto.randomUUID(),
         email: user.email,
-        passwordHash: user.passwordHash,
-        name: user.name,
+        password: user.password, // Changed from passwordHash
+        name: user.name || null, // Ensure null for Drizzle
       })
       .returning();
 
@@ -29,8 +29,8 @@ export class PgUserRepository implements IUserRepository {
     return {
       id: newUser.id,
       email: newUser.email,
-      passwordHash: newUser.passwordHash,
-      name: newUser.name || undefined,
+      password: newUser.password, // Changed from passwordHash
+      name: newUser.name, // Drizzle returns null for nullable fields
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
     };
@@ -45,12 +45,12 @@ export class PgUserRepository implements IUserRepository {
     if (user.length === 0) {
       return null;
     }
-    const foundUser = user[0];
+    const foundUser = user[0]!;
     return {
       id: foundUser.id,
       email: foundUser.email,
-      passwordHash: foundUser.passwordHash,
-      name: foundUser.name || undefined,
+      password: foundUser.password, // Changed from passwordHash
+      name: foundUser.name,
       createdAt: foundUser.createdAt,
       updatedAt: foundUser.updatedAt,
     };
@@ -65,12 +65,12 @@ export class PgUserRepository implements IUserRepository {
     if (user.length === 0) {
       return null;
     }
-    const foundUser = user[0];
+    const foundUser = user[0]!;
     return {
       id: foundUser.id,
       email: foundUser.email,
-      passwordHash: foundUser.passwordHash,
-      name: foundUser.name || undefined,
+      password: foundUser.password, // Changed from passwordHash
+      name: foundUser.name,
       createdAt: foundUser.createdAt,
       updatedAt: foundUser.updatedAt,
     };

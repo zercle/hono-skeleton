@@ -4,10 +4,10 @@ This package contains database schema definitions, migrations, and seeding scrip
 
 ## Setup
 
-Set the `DATABASE_URL` environment variable to point to your PostgreSQL database:
+Set the `DB_URL` environment variable to point to your PostgreSQL database:
 
 ```bash
-export DATABASE_URL=postgres://username:password@localhost:5432/mydb
+export DB_URL=postgres://username:password@localhost:5432/mydb
 ```
 
 ## Running Migrations

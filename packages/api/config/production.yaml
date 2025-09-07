@@ -1,0 +1,20 @@
+server:
+  port: 3000
+  host: '0.0.0.0'
+
+database:
+  url: 'postgres://user:password@localhost:5432/hono_skeleton_prod'
+
+jwt:
+  secret: 'change-me-in-production'
+  expiresIn: '1h'
+
+bcrypt:
+  rounds: 12
+
+logging:
+  level: 'warn'
+
+cors:
+  origins:
+    - 'https://yourdomain.com'

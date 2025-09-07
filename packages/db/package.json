@@ -1,0 +1,27 @@
+{
+  "name": "@zercle/db",
+  "version": "0.1.0",
+  "private": false,
+  "main": "./src/index.ts",
+  "scripts": {
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "bun scripts/migrate.ts",
+    "db:seed": "bun scripts/seed.ts",
+    "db:check": "bun scripts/check.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "drizzle-kit": "^0.23.1",
+    "drizzle-orm": "^0.32.1",
+    "postgres": "^3.4.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "bun": ">=1.0.0 <2"
+  }
+}

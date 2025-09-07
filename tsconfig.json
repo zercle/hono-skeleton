@@ -1,16 +1,12 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "strict": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
-    "baseUrl": "./src",
-    "paths": {
-      "@domain/*": ["domain/*"],
-      "@usecase/*": ["usecase/*"],
-      "@handler/*": ["handler/*"],
-      "@repository/*": ["repository/*"],
-      "@infrastructure/*": ["infrastructure/*"],
-      "@routes/*": ["routes/*"]
-    }
-  }
+    "composite": true
+  },
+  "references": [
+    { "path": "./packages/api" },
+    { "path": "./packages/db" },
+    { "path": "./packages/shared" }
+  ],
+  "files": []
 }

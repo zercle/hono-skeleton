@@ -1,53 +1,92 @@
-# Product Definition
+# Product
 
-## Project Purpose
+## Name
+Hono Backend Mono-Repo Template (Bun Runtime)
 
-This is a **Hono.js backend mono-repo template** on the **Bun** runtime that adopts domain-specific Clean Architecture within each domain package. It provides a standardized, scalable foundation for backend API development with clear domain isolation, SOLID principles, and modern tooling out of the box.
+## Purpose
+Provide a production-grade backend template built on Bun and Hono that demonstrates Domain-Driven Clean Architecture with strong boundaries, testability, and operational readiness out of the box.
 
 ## Problem Statement
+Teams starting new backend services often spend significant effort on bootstrapping project structure, wiring dependencies, configuring environments, and establishing best practices. This template reduces setup time and enforces a maintainable architecture from day one.
 
-Backend project setup often involves repetitive configuration of routing, database integration, dependency injection, authentication, and project structure. Developers waste significant time setting up these foundational elements for each new project, leading to:
+## Target Users
+- Backend engineers and teams adopting Bun and Hono
+- Organizations standardizing on Clean Architecture and DDD
+- Developers who need a fast, opinionated starting point with testing and docs built-in
 
-- Inconsistent project structures across teams
-- Time spent on boilerplate code instead of business logic
-- Lack of standardized patterns for scalable architecture
-- Manual configuration of common backend requirements
+## Core Value
+- Speed to first production-ready service
+- Clear architectural boundaries for long-term maintainability
+- Ready-to-use patterns for:
+  - Configuration: YAML files + .env + environment validation (hierarchical loading)
+  - Configuration conventions: Prefer DB_* variables with DB_URL fallback for compatibility; prefer VALKEY_* variables with VALKEY_URL fallback for cache
+  - Dependency Injection: TSyringe
+  - Validation: Zod schemas
+  - Persistence: Drizzle ORM + PostgreSQL 17 with migrations; alternative raw SQL via Bun builtin drivers
+  - Caching: Valkey 8 (Redis-compatible) for cache/session/rate-limiting use cases
+  - Auth: Hono JWT middleware
+  - Identifiers: UUIDv7 (index-friendly)
+  - Response format: JSend standard
+  - Documentation: Hono OpenAPI + Swagger UI
+  - Testing: bun test; per-domain mocks; optional vitest/jest; alternative in-memory SQLite
 
-## Solution
+## Key Features
+- Domain-Driven Clean Architecture layout with boundaries across entities, use cases, repositories, handlers, routes, and models
+- Hono-based HTTP API
+- Drizzle ORM with PostgreSQL 17 and managed migrations; optional raw SQL using Bun builtin drivers
+- Zod validation and JSend response format
+- TSyringe dependency injection and modular composition
+- JWT auth primitives using Hono middleware
+- UUIDv7 identifiers
+- Caching via Valkey 8 (Redis protocol compatible)
+- Bun-native testing workflow:
+  - Each domain includes a mocks directory or package for repository and adapter test doubles
+  - bun:test as primary runner; vitest/jest supported as alternatives
+  - In-memory SQLite option for isolated integration tests
+- OpenAPI docs with Swagger UI
+- Hot reload via Bun --watch
 
-This boilerplate provides:
+## Configuration Conventions
+- Preferred environment variables for database (container-friendly):
+  - DB_HOST
+  - DB_PORT
+  - DB_NAME
+  - DB_USER
+  - DB_PASSWORD
+- Fallback supported: DB_URL
+- The configuration layer should assemble a connection string from DB_* when present; otherwise read DB_URL
+- Ensures compatibility with Docker/Podman and secret managers
 
-- **Domain-specific Clean Architecture**: Each domain package contains a full layered architecture (entities, use cases, repositories, handlers, routes, models, tests) for clear domain isolation and SOLID compliance
-- **Modern Tech Stack**: Hono.js (fast web framework) on Bun runtime (fast JavaScript runtime)
-- **Scalable Mono-Repo Structure**: Domain-driven design with self-contained domain modules
-- **Ready-to-use Integrations**: Prisma ORM for database, tsyringe for dependency injection, JSON Web Tokens for authentication, Bun ORM for type-safe SQL queries
-- **Flexible Database Migrations**: Support for `node-pg-migrate` or `umzug` with `pg` driver for robust database schema evolution
-- **Repository Abstractions**: Encapsulated data access logic through repository classes/functions, enabling mock testing
-- **Standardized API Responses**: JSON API responses formatted according to the `omniti-labs/jsend` specification via middleware/helpers
-- **Comprehensive Testing**: Enhanced testing capabilities with `jest`/`sinon` for mocking repository methods and `pg-mock`/Bun query mocking for database layer tests
-- **Development Tooling**: TypeScript, Bun test runner, ESLint, Prettier configured out of the box
+- Preferred environment variables for cache (Valkey 8):
+  - VALKEY_HOST
+  - VALKEY_PORT
+  - VALKEY_PASSWORD (optional)
+- Fallback supported: VALKEY_URL (redis:// syntax is acceptable with Valkey)
+- The configuration layer should assemble cache connection details from VALKEY_* when present; otherwise read VALKEY_URL
 
-## Expected User Experience
-
-### For Developers
-
-- **Quick Setup**: Clone, configure environment, and start developing business logic immediately
-- **Clear Patterns**: Follow established patterns for adding new domains/features, including database migrations and API response handling
-- **Scalable Growth**: Architecture that grows with project complexity
-- **Developer Productivity**: Hot reload, TypeScript support, and comprehensive tooling
-
-### For Teams
-
-- **Consistency**: All projects follow the same architectural patterns
-- **Knowledge Transfer**: New team members can quickly understand any project using this template
-- **Best Practices**: Built-in patterns for testing, error handling, and code organization
+## Non-Goals
+- Building a UI or frontend application
+- Providing domain-specific business logic beyond examples
+- Supporting every database or message broker out of the box
+- Replacing organization-specific DevOps and deployment policies
 
 ## Success Criteria
+- A new service can be created, tested, documented, and containerized in under one hour
+- Code remains modular and testable as features grow
+- Tests and docs integrate cleanly with the architecture
+- Teams can extend domains without breaking cross-boundary contracts
 
-The boilerplate is successful when developers can:
+## User Experience Principles
+- Minimal ceremony to add a new domain or endpoint
+- Consistent API responses using the JSend standard
+- Clear errors with safe defaults in production
+- Discoverable documentation via OpenAPI and Swagger UI
 
-1. Start a new backend project in under 5 minutes
-2. Add new API endpoints following clear, established patterns
-3. Scale the application without architectural refactoring
-4. Onboard new team members quickly due to familiar structure
-5. Focus on business logic rather than infrastructure setup
+## Example Use Cases
+- Build an Auth domain with register and login endpoints
+- Add a Posts domain that demonstrates CRUD with repository and use case separation
+- Extend configuration for multiple environments using YAML plus .env overrides
+- Write domain tests using per-domain mocks without a real database; add in-memory SQLite integration tests if needed
+
+## Sources of Truth
+- Project brief: .agents/rules/memory-bank/brief.md

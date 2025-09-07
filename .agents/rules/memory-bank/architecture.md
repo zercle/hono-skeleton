@@ -1,239 +1,180 @@
-# System Architecture
+# Architecture
 
-## Architectural Pattern
+## Overview
+Domain-Driven Clean Architecture on Hono with the Bun runtime. Clear boundaries separate delivery, application, domain, and infrastructure concerns. Dependencies point inward, validation is explicit at the edges, and operational concerns are addressed with standard middleware and configuration.
 
-This boilerplate follows **Clean Architecture** principles with **Domain-Driven Design (DDD)** concepts. The updated briefs propose **mono-repo architecture** where each domain contains its own complete Clean Architecture implementation, ensuring clear separation of concerns, domain isolation, and maintainable code structure. This also includes enhanced database migration strategies, robust repository abstractions, standardized JSON API responses, and comprehensive testing architecture.
+Source of truth:
+- brief at .agents/rules/memory-bank/brief.md
 
-## Layered Architecture Design
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Presentation Layer                       │
-│                    (src/app.ts, src/routes/)                   │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────────┐
-│                        Handler Layer                            │
-│                       (src/handler/)                           │
-│              Request Validation & Response Formatting           │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────────┐
-│                       Use Case Layer                            │
-│                      (src/usecase/)                            │
-│                    Business Logic & Rules                       │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────────┐
-│                       Domain Layer                              │
-│                      (src/domain/)                             │
-│                 Domain Models & Interfaces                      │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────────┐
-│                    Repository Layer                             │
-│                    (src/repository/)                           │
-│                   Data Access & Persistence                     │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────────┐
-│                   Infrastructure Layer                          │
-│                  (src/infrastructure/)                         │
-│            Database, Config, External Services                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Current Project Structure
-
-### Actual Structure (Production-Ready State)
+## Project Structure
+The architecture mirrors the structure described in the brief and adapted to the current mono-repo under packages:
 
 ```
 .
-├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-├── src/
-│   ├── app.ts                      # Hono app and route registration
-│   ├── server.ts                   # Server startup
-│   ├── domains/                    # Domain-specific modules
-│   │   ├── auth/                   # Authentication domain
-│   │   │   ├── entities/
-│   │   │   │   └── user.entity.ts
-│   │   │   ├── usecases/
-│   │   │   │   ├── auth.usecase.ts
-│   │   │   │   └── interfaces/
-│   │   │   ├── repositories/
-│   │   │   │   ├── user.repository.ts
-│   │   │   │   └── interfaces/
-│   │   │   ├── handlers/
-│   │   │   │   └── auth.handler.ts
-│   │   │   ├── routes/
-│   │   │   │   └── auth.routes.ts
-│   │   │   ├── models/
-│   │   │   │   └── auth.models.ts
-│   │   │   └── tests/
-│   │   │       ├── auth.usecase.test.ts
-│   │   │       └── auth.handler.test.ts
-│   │   ├── posts/                  # Posts domain
-│   │   │   ├── entities/
-│   │   │   │   └── post.entity.ts
-│   │   │   ├── usecases/
-│   │   │   ├── repositories/
-│   │   │   ├── handlers/
-│   │   │   ├── routes/
-│   │   │   ├── models/
-│   │   │   └── tests/
-│   │   └── greeting/               # Greeting domain (example)
-│   │       ├── entities/
-│   │       ├── usecases/
-│   │       ├── repositories/
-│   │       ├── handlers/
-│   │       ├── routes/
-│   │       ├── models/
-│   │       └── tests/
-│   └── shared/                     # Shared infrastructure
-│       ├── database/
-│       │   ├── connection.ts
-│       │   └── base-repository.ts
-│       ├── middleware/
-│       │   ├── auth.middleware.ts
-│       │   ├── cors.middleware.ts
-│       │   └── validation.middleware.ts
-│       ├── config/
-│       │   └── app.config.ts
-│       ├── utils/
-│       │   ├── uuid.util.ts        # UUIDv7 generator
-│       │   ├── response.util.ts
-│       │   └── validation.util.ts
-│       ├── types/
-│       │   └── common.types.ts
-│       └── container/
-│           └── di.container.ts
-├── .env.example
-├── bun.lockb
-├── package.json
-├── tsconfig.json
-├── Dockerfile
-├── docker-compose.yml
-└── README.md
+├── packages/
+│   ├── api/                      # Hono app, domains, routes, handlers
+│   ├── db/                       # Drizzle schema, migrations, DB scripts
+│   └── shared/                   # Shared types, DI tokens, utilities
+├── compose.yml                   # Local orchestration
+├── Dockerfile                    # Container build
+└── package.json                  # Workspaces and scripts
 ```
 
-### Target Structure (From Brief.md)
+## Clean Architecture Boundaries
+- Delivery
+  - Hono routes and handlers
+  - Maps HTTP requests to handlers and returns standardized responses
+  - Depends on use case interfaces only
+- Application (Use Cases)
+  - Orchestrates business rules and workflows
+  - Depends on domain entities and repository interfaces
+- Domain
+  - Entities and value objects
+  - Pure logic and invariants
+- Infrastructure
+  - Concrete implementations of repository interfaces and adapters
+  - Database, cache (Valkey), configuration, middleware, logging
+- Shared
+  - Types, utilities, DI container, tokens
 
+Dependency rules:
+- Delivery depends inward on Use Cases and shared contracts
+- Use Cases depend inward on Domain and outward only on interfaces
+- Infrastructure depends inward to implement interfaces; no inward dependency on infrastructure from core layers
+- Shared has no downstream runtime dependencies
+
+## Request Lifecycle
+- Routing
+  - Hono routes accept HTTP requests and map to handlers
+- Validation
+  - Zod schemas validate inputs and shape models
+- Use case execution
+  - Handlers resolve use cases from the DI container and invoke them with validated inputs
+- Data access and caching
+  - Use cases call repository ports; DI supplies implementations backed by Drizzle or raw SQL
+  - Optional caching via Valkey adapters (read-through, write-through, or cache-aside) for appropriate queries
+- Response shaping
+  - JSend envelopes for success and error formats
+- Errors and logging
+  - Middleware coordinates safe error handling and structured logs
+
+```mermaid
+graph TD
+A[Client] --> B[Hono Routes]
+B --> C[Handlers]
+C --> D[Zod Validation]
+D --> E[Use Cases]
+E --> F[Repository Ports]
+F --> G[Infrastructure Adapters]
+G --> H[PostgreSQL 17 (primary) or SQLite (tests)]
+E --> K[Cache (Valkey 8, optional)]
+E --> I[JSend Response]
+I --> J[Client]
 ```
-hono-skeleton/
-├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-├── src/
-│   ├── app.ts                      # Hono app and route registration
-│   ├── server.ts                   # Server startup
-│   ├── domains/                    # Domain-specific modules
-│   ├── shared/                     # Shared infrastructure
-│   └── tests/                      # Unit and integration tests
-├── .env.example
-├── Dockerfile
-├── docker-compose.yml
-└── README.md
+
+## Configuration and Environments
+- Hierarchical configuration with YAML per environment plus .env overrides
+- Precedence
+  1. Default/base configuration
+  2. Environment-specific YAML
+  3. .env for local overrides
+  4. Process environment in production
+- Database configuration convention
+  - Prefer DB_* variables for container and infra compatibility:
+    - DB_HOST
+    - DB_PORT
+    - DB_NAME
+    - DB_USER
+    - DB_PASSWORD
+  - Optional fallback: DB_URL for legacy or simple setups
+  - The configuration layer should assemble a connection string from DB_* when provided; otherwise read DB_URL
+- Cache configuration convention (Valkey)
+  - Prefer VALKEY_* variables for container and infra compatibility:
+    - VALKEY_HOST
+    - VALKEY_PORT
+    - VALKEY_PASSWORD (optional)
+  - Optional fallback: VALKEY_URL (redis:// syntax is acceptable with Valkey)
+  - The configuration layer should assemble cache connection details from VALKEY_* when provided; otherwise read VALKEY_URL
+- Expected keys
+  - server: port, host
+  - database: host, port, name, user, password, url (optional/fallback)
+  - cache: host, port, password, url (optional/fallback)
+  - auth.jwt: expiresIn
+  - cors: origins
+
+## Database Layer Organization
+- Options
+  - Drizzle ORM: schema-first with type-safe queries and migration generation
+  - Raw SQL: powered by Bun runtime with built-in SQLite or PostgreSQL drivers
+- Guidance
+  - Use Drizzle for most domains to benefit from schema typing and migrations
+  - Raw SQL is acceptable for high-performance, specialized queries or very small utilities
+- Migrations
+  - Use drizzle-kit to generate and apply migrations when using Drizzle
+  - For raw SQL paths, maintain SQL migrations under packages/db/migrations and run them via scripts
+
+## Domain Testing Strategy
+- Goals
+  - Fast, isolated tests without requiring a live database by default
+  - Confidence in domain logic and repository contracts
+- Structure
+  - Each domain maintains its own mocks directory or package:
+    - src/domains/<domain>/mocks for interfaces and test doubles
+  - Use bun:test as the primary runner
+- Techniques
+  - Mock repository interfaces using TypeScript types to avoid real DB access
+  - Provide mock implementations for handlers and external adapters as needed
+  - Optional test runners: vitest or jest can be used when additional features are desired
+  - Alternative: in-memory SQLite to exercise SQL paths without external services
+- Integration tests
+  - Spin up ephemeral DB containers via Compose or use in-memory SQLite
+  - Run migrations before integration tests
+
+## API Documentation
+- Hono OpenAPI generation
+- Swagger UI endpoint for discoverability
+- Contracts synchronized with schemas and routes
+
+## Error Handling and Logging
+- Centralized error middleware
+  - Sanitizes details in production
+  - Maps validation and domain errors to appropriate status codes
+- Structured logging via standard middleware patterns
+  - Correlate request context where available
+
+## Security Considerations
+- JWT-based authentication via Hono JWT middleware
+- Password hashing with bcrypt
+- UUIDv7 identifiers
+- CORS with explicit allowed origins
+- Input validation at all public boundaries
+- Avoid leaking internal details in error responses
+
+## Scripts and Commands
+Reference scripts defined in the brief’s package.json
+
+```json
+{
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "build": "bun build src/server.ts --outdir ./dist",
+    "start": "bun dist/server.js",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "bun src/scripts/migrate.ts",
+    "db:seed": "bun src/scripts/seed.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  }
+}
 ```
 
-## Key Architectural Decisions
-
-### 1. Runtime & Framework Choice
-
-- **Bun Runtime**: Fast JavaScript runtime with built-in bundler, test runner, and package manager
-- **Hono.js**: Lightweight, fast web framework with excellent TypeScript support
-- **TypeScript**: Strong typing throughout the application
-
-### 2. Data Layer Strategy
-
-- **Prisma ORM**: Type-safe database client with migrations
-- **Bun ORM**: Used for type-safe SQL queries and entity/data access, similar to SQLC generated code
-- **Database Migrations**: Support for `node-pg-migrate` or `umzug` with `pg` driver for robust schema evolution
-- **Repository Pattern**: Abstraction layer over data access, with interfaces/abstractions to enable mocking
-- **Database Agnostic**: Can work with PostgreSQL, MySQL, SQLite, etc.
-
-### 3. Dependency Management
-
-- **tsyringe**: Lightweight dependency injection container
-- **Interface-Based Design**: All dependencies injected via interfaces
-- **Singleton Services**: Business logic services as singletons
-
-### 4. Request Flow Pattern
-
-```
-HTTP Request → Route → Handler → UseCase → Repository → Database
-                ↓         ↓        ↓         ↓
-            Validation  Format   Business  Data Access
-```
-
-## Critical Code Flows
-
-### 1. Application Bootstrap
-
-- Entry point: `src/index.ts` (current) → `src/server.ts` (target)
-- App configuration: `src/app.ts` (target)
-- Route registration: Centralized in `src/app.ts`
-- DI container setup: In infrastructure layer
-
-### 2. Request Handling
-
-- Route definition → Handler invocation → Use case execution
-- Error handling via middleware
-- Response formatting in handlers using `omniti-labs/jsend` specification via middleware or helper functions
-
-### 3. Database Operations
-
-- Use case → Repository interface → Prisma implementation
-- Transaction management at use case level
-- Migration handling via Prisma CLI
-
-## Component Relationships
-
-### Core Dependencies
-
-- **Handlers** depend on **Use Cases** (via interfaces)
-- **Use Cases** depend on **Repositories** (via interfaces)
-- **Repositories** implement domain interfaces
-- **Infrastructure** provides concrete implementations
-
-### Cross-Cutting Concerns
-
-- **Authentication**: JWT middleware
-- **Validation**: Request validation middleware
-- **Logging**: Structured logging throughout layers
-- **Error Handling**: Global error handler
-
-## Technology Integration Points
-
-### Web Framework (Hono.js)
-
-- Route definitions in `/routes` folder
-- Middleware for auth, validation, error handling
-- Context object for request/response handling
-
-### Database (Prisma)
-
-- Schema definition in `prisma/schema.prisma`
-- Client generation for type safety
-- Migration management via CLI
-
-### Dependency Injection (tsyringe)
-
-- Container registration in infrastructure
-- Decorator-based injection
-- Lifecycle management for services
-
-## Security Architecture
-
-- **Authentication**: JWT-based with middleware
-- **Input Validation**: Request-level validation
-- **Environment Variables**: Secure configuration management
-- **CORS**: Configurable cross-origin policies
-
-## Testing Strategy Architecture
-
-- **Unit Tests**: Individual layer testing with `jest` or `sinon` for mocking repository methods
-- **Integration Tests**: Cross-layer functionality, including database layer tests with `pg-mock` or Bun query mocking
-- **API Tests**: End-to-end request/response cycles
-- **Bun Test Runner**: Native testing framework
+## Acceptance for Architectural Readiness
+- Folder structure and dependency direction match Clean Architecture
+- DI container registers use cases and repository implementations by tokens
+- Configuration validated with environment-aware overrides and DB_* convention with DB_URL fallback
+- Cache configuration validated and documented with VALKEY_* convention and VALKEY_URL fallback; cache adapters optional and isolated
+- Primary database target is PostgreSQL 17; SQLite allowed for tests
+- OpenAPI generated and served with Swagger UI
+- Tests cover public use cases, repository contracts, and critical adapters

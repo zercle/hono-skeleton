@@ -1,0 +1,15 @@
+server:
+  port: 3001
+
+database:
+  url: "postgres://test:test@localhost:5432/test_db"
+
+cache:
+  url: "redis://localhost:6379"
+
+jwt:
+  secret: "test-secret-key-for-testing-only"
+  expiresIn: "1h"
+
+logging:
+  level: "error"  # Reduce noise in tests

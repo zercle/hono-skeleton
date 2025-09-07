@@ -1,53 +1,44 @@
-const js = require('@eslint/js');
-const tseslint = require('@typescript-eslint/eslint-plugin');
-const tsparser = require('@typescript-eslint/parser');
+import js from '@eslint/js';
+import globals from 'globals';
+import ts from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 
-module.exports = [
+export default [
   js.configs.recommended,
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['packages/**/*.ts', 'packages/**/*.tsx'],
     languageOptions: {
-      parser: tsparser,
+      parser: tsParser,
       parserOptions: {
-        ecmaVersion: 2020,
+        project: ['./tsconfig.json', './packages/api/tsconfig.json', './packages/db/tsconfig.json'],
+        ecmaVersion: 'latest',
         sourceType: 'module',
-        project: './tsconfig.json',
       },
       globals: {
-        console: 'readonly',
-        process: 'readonly',
-        Buffer: 'readonly',
-        Bun: 'readonly',
-      },
+        ...globals.browser,
+        ...globals.node,
+      }
     },
     plugins: {
-      '@typescript-eslint': tseslint,
+      '@typescript-eslint': ts,
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-        },
-      ],
-      'no-unused-vars': 'off', // Use TypeScript version instead
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      'no-console': 'off',
-      '@typescript-eslint/no-unused-expressions': 'off',
+      ...ts.configs.recommended.rules,
+      'no-unused-vars': 'off', // Disabled for TypeScript files, handled by TypeScript itself
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }], // Re-enable for TS, allow unused args with '_' prefix
+      'no-console': 'warn',
+      'prefer-const': 'error',
+      'no-var': 'error',
     },
   },
   {
-    files: ['**/*.interface.ts', '**/interfaces/**/*.ts'],
-    rules: {
-      '@typescript-eslint/no-unused-vars': 'off',
-      'no-unused-vars': 'off',
-    },
-  },
-  {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', 'prisma/**', '*.js'],
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '*.d.ts',
+      'migrations/',
+      '.env*',
+      'eslint.config.js',
+    ],
   },
 ];

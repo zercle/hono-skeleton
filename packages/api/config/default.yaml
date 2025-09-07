@@ -1,0 +1,21 @@
+server:
+  port: 3000
+  host: '0.0.0.0'
+
+database:
+  url: 'postgres://postgres:postgres@localhost:5432/hono_skeleton'
+
+jwt:
+  secret: 'your-super-secret-jwt-key-change-in-production'
+  expiresIn: '24h'
+
+bcrypt:
+  rounds: 10
+
+logging:
+  level: 'info'
+
+cors:
+  origins:
+    - 'http://localhost:3000'
+    - 'http://localhost:3001'

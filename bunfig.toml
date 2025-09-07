@@ -1,0 +1,5 @@
+[module]
+"@zercle/shared" = "./packages/shared/src/index.ts"
+"@zercle/shared/*" = "./packages/shared/src/*"
+"@zercle/db" = "./packages/db/src/index.ts"
+"@zercle/db/*" = "./packages/db/src/*"

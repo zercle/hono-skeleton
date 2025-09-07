@@ -1,0 +1,21 @@
+server:
+  port: 3000
+  host: '0.0.0.0'
+
+database:
+  url: 'postgres://postgres:postgres@localhost:5432/hono_skeleton_dev'
+
+jwt:
+  secret: 'dev-secret-key'
+  expiresIn: '7d'
+
+bcrypt:
+  rounds: 8
+
+logging:
+  level: 'debug'
+
+cors:
+  origins:
+    - 'http://localhost:3000'
+    - 'http://localhost:3001'
